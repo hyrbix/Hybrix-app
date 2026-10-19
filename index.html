@@ -566,7 +566,7 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
 
     <section id="v-sim" class="view" hidden>
       <section class="card pacecard"><div class="pacehead"><div><h3>Calculadora de ritmo</h3><p class="lede" style="font-size:13px">Escribe tu tiempo meta y te digo a qué ritmo correr cada km y cuánto tardar en cada estación.</p></div>
-        <div class="wfield"><label class="flabel" for="paceIn">Tiempo meta</label><input type="text" id="paceIn" inputmode="numeric" placeholder="1:15:00" autocomplete="off"><button class="btn main" id="paceGo" type="button">Calcular</button></div></div>
+        <div class="wfield"><label class="flabel" for="paceIn">Tiempo meta</label><input type="text" id="paceIn" data-tm inputmode="numeric" placeholder="1:15:00" autocomplete="off"><button class="btn main" id="paceGo" type="button">Calcular</button></div></div>
         <span class="status" id="paceSt" role="status"></span><div id="paceOut"></div></section>
       <div class="vhead"><div><h2>Simulacro de carrera</h2><p class="lede">Las 8 estaciones oficiales con 1 km de carrera antes de cada una. El reloj corre hacia arriba y toma tu split en cada estación.</p></div></div>
       <div class="field"><span class="flabel">Formato</span><div class="seg-ctl" id="simPart"></div></div>
@@ -1429,7 +1429,7 @@ function renderSession(){
         ${st.sets.map((x,j)=>`<div class="setrow${x.done?' done':''}"><span class="sn">Serie ${j+1}</span><input type="text" inputmode="numeric" aria-label="Repeticiones serie ${j+1}" data-i="${i}" data-j="${j}" data-f="r" value="${esc(x.r)}" placeholder="${esc(repsNum(it.reps)||it.reps)}"><input type="text" inputmode="decimal" aria-label="Kilos serie ${j+1}" data-i="${i}" data-j="${j}" data-f="kg" value="${esc(x.kg)}" placeholder="${rx.kg??'—'}"><button class="ok" type="button" data-ok="${i}-${j}" aria-label="Serie ${j+1} hecha">✓</button></div>`).join('')}</div></section>`}
     return `<section class="ex"><div class="exh">${svg(info((it.wk.blocks.find(b=>b.kind!=="timed")||it.wk.blocks[0]).steps[0]).pic)}<div><div class="exn">${esc(it.name)}</div><p class="exnote">${esc(it.desc)}</p></div></div>
       <div class="actions" style="margin-top:12px"><button class="btn main" type="button" data-play="${i}">Empezar entrenamiento</button>
-      <label class="flabel" for="wt${i}" style="margin-left:4px">Tu tiempo</label><input type="text" id="wt${i}" data-wt="${i}" inputmode="numeric" placeholder="min:seg" value="${esc(st.time)}" style="width:110px;font-family:var(--num);font-size:19px;text-align:center">
+      <label class="flabel" for="wt${i}" style="margin-left:4px">Tu tiempo</label><input type="text" id="wt${i}" data-wt="${i}" data-tm inputmode="numeric" placeholder="8:45" value="${esc(st.time)}" style="width:110px;font-family:var(--num);font-size:19px;text-align:center">
       ${st.done?'<span class="donetag">✓ Hecho</span>':''}</div></section>`;
   }).join('');
 }
@@ -1501,15 +1501,15 @@ function renderLogForm(){
   const f=$('#logForm');
   if(!UID){f.innerHTML=`<p class="status">Para guardar tu tiempo entra con tu cuenta y pide acceso de participante.</p>`;return}
   const rounds=HOY.blocks.filter(b=>b.kind==='round');
-  const fields=rounds.length?rounds.map((b,i)=>`<label for="lg${i}">R${i+1}<input type="text" id="lg${i}" inputmode="numeric" placeholder="8:45" autocomplete="off"></label>`).join('')
-    :`<label for="lg0">Total<input type="text" id="lg0" inputmode="numeric" placeholder="1:15:30" autocomplete="off"></label>`;
+  const fields=rounds.length?rounds.map((b,i)=>`<label for="lg${i}">R${i+1}<input type="text" id="lg${i}" data-tm inputmode="numeric" placeholder="8:45" autocomplete="off"></label>`).join('')
+    :`<label for="lg0">Total<input type="text" id="lg0" data-tm inputmode="numeric" placeholder="1:15:30" autocomplete="off"></label>`;
   f.innerHTML=`<div class="logrow">${fields}</div><div class="actions" style="margin-top:4px"><button class="btn main" type="submit">Guardar mi tiempo</button><span class="status" id="logStatus" role="status"></span></div>`;
 }
 $('#logForm').addEventListener('submit',async e=>{
   e.preventDefault();const st=$('#logStatus');if(!HOY||!UID)return;
   const rounds=HOY.blocks.filter(b=>b.kind==='round');
   const n=rounds.length||1,vals=[];
-  for(let i=0;i<n;i++){const v=parseT($('#lg'+i).value);if(v==null||v<=0){st.className='status err';st.textContent=`Revisa ${rounds.length?'R'+(i+1):'el total'}: escribe min:seg, por ejemplo 8:45.`;return}vals.push(v)}
+  for(let i=0;i<n;i++){const v=parseT($('#lg'+i).value);if(v==null||v<=0){st.className='status err';st.textContent=`Revisa ${rounds.length?'R'+(i+1):'el total'}: escribe solo números, por ejemplo 845 para 8:45.`;return}vals.push(v)}
   const splits=rounds.length?vals.map((t,i)=>({label:'R'+(i+1),t})):[];
   const sess={title:HOY.title,kind:HOY.kind,div:DIV,minutes:HOY.minutes||null,total:vals.reduce((a,b)=>a+b,0),splits,wodId:HOY.id,at:Date.now(),src:'manual'};
   st.className='status';st.textContent='Guardando…';
@@ -1725,7 +1725,7 @@ async function renderRetos(){
   const u=RUNIT[RETO.unit]||RUNIT.reps,ended=RETO.end&&todayKey()>RETO.end;
   const rows=BOARD.filter(b=>b.retos&&b.retos[RETO.id]).map(b=>({id:b.id,...b.retos[RETO.id]})).filter(r=>RETODIV==='all'||r.div===RETODIV).sort((a,b)=>u.low?a.v-b.v:b.v-a.v);
   html+=`<section class="card retocard"><div class="eyebrow" style="font-size:13px">Reto del mes${RETO.end?` · ${ended?'terminó':'termina'} el ${fmtD(new Date(RETO.end+'T12:00:00').getTime())}`:''}</div><h2>${esc(RETO.title)}</h2><p class="lede">${esc(RETO.desc||'')}</p>
-    ${UID&&!ended?`<form id="retoSub" class="wfield" style="margin-top:12px"><label class="flabel" for="rVal">Tu resultado (${u.low?'min:seg':RETO.unit==='reps'?'reps':RETO.unit})</label><input type="text" id="rVal" inputmode="numeric" placeholder="${u.ph}" autocomplete="off"><button class="btn main" type="submit">Subir resultado</button><span class="status" id="rvSt" role="status"></span></form>`:''}
+    ${UID&&!ended?`<form id="retoSub" class="wfield" style="margin-top:12px"><label class="flabel" for="rVal">Tu resultado (${u.low?'min:seg':RETO.unit==='reps'?'reps':RETO.unit})</label><input type="text" id="rVal" ${u.low?'data-tm ':''}inputmode="numeric" placeholder="${u.ph}" autocomplete="off"><button class="btn main" type="submit">Subir resultado</button><span class="status" id="rvSt" role="status"></span></form>`:''}
     </section><div class="bhead" style="margin:18px 0 8px"><h3>Ranking</h3><div class="seg-ctl" id="retoDiv">${[['all','Todas'],...Object.entries(DIVS)].map(([k,n])=>`<button type="button" data-d="${k}" aria-pressed="${RETODIV===k}">${n}</button>`).join('')}</div></div>
     <ol class="board" id="retoBoard">${rows.length?'':'<li style="display:block;color:var(--mute)">Nadie ha subido su resultado todavía.</li>'}</ol>`;
   el.innerHTML=html;
@@ -1740,7 +1740,7 @@ document.addEventListener('submit',async e=>{
     catch(err){st.className='status err';st.textContent='No se pudo publicar: necesitas ser editor de la app.'}}
   if(e.target.id==='retoSub'){e.preventDefault();const st=$('#rvSt'),raw=$('#rVal').value,u=RETO.unit;
     const v=u==='time'?parseT(raw):parseFloat(String(raw).replace(',','.'));
-    if(v==null||!(v>0)){st.className='status err';st.textContent=u==='time'?'Escribe min:seg, por ejemplo 5:30.':'Escribe solo el número.';return}
+    if(v==null||!(v>0)){st.className='status err';st.textContent=u==='time'?'Escribe solo números, por ejemplo 530 para 5:30.':'Escribe solo el número.';return}
     st.className='status';st.textContent='Guardando…';
     try{await boardWrite(b=>{b.retos=b.retos||{};const old=b.retos[RETO.id];const better=!old||(RUNIT[u].low?v<old.v:v>old.v);if(better)b.retos[RETO.id]={v,div:DIV,at:Date.now()}});st.className='status ok';st.textContent='Listo. Solo cuenta tu mejor resultado.'}
     catch(err){st.className='status err';st.textContent='No se pudo guardar. Pide al coach acceso de participante.'}}
@@ -2041,13 +2041,13 @@ function profileFormHTML(p,id){p=p||{};return `<form id="${id}" class="rform">
   <label for="${id}D">Categoría<select id="${id}D">${Object.entries(DIVS).map(([k,n])=>`<option value="${k}"${(p.div||DIV)===k?' selected':''}>${n}</option>`).join('')}</select></label>
   <label for="${id}L">Nivel<select id="${id}L">${Object.entries(LEVELS).map(([k,n])=>`<option value="${k}"${p.level===k?' selected':''}>${n}</option>`).join('')}</select></label>
   <label for="${id}G">Objetivo<select id="${id}G">${Object.entries(GOALS).map(([k,n])=>`<option value="${k}"${p.goal===k?' selected':''}>${n}</option>`).join('')}</select></label>
-  <label for="${id}K">Tiempo en 5 km (opcional)<input type="text" id="${id}K" inputmode="numeric" value="${p.k5?fmtT(p.k5):''}" placeholder="25:00"></label>
+  <label for="${id}K">Tiempo en 5 km (opcional)<input type="text" id="${id}K" data-tm inputmode="numeric" value="${p.k5?fmtT(p.k5):''}" placeholder="25:00"></label>
   <label for="${id}W">Peso en kg (opcional)<input type="text" id="${id}W" inputmode="decimal" value="${p.kg||''}" placeholder="78"></label>
   <div class="actions" style="margin-top:0"><button class="btn main" type="submit">Guardar perfil</button><span class="status" id="${id}St" role="status"></span></div></form>`}
 async function saveProfile(form){
   const g=s=>$('#'+form+s),st=g('St');const nick=g('N').value.trim();
   if(!nick){st.className='status err';st.textContent='Escribe tu apodo.';return false}
-  const k5=g('K').value?parseT(g('K').value):null;if(g('K').value&&!(k5>600&&k5<4200)){st.className='status err';st.textContent='El tiempo de 5 km va en min:seg, por ejemplo 25:00.';return false}
+  const k5=g('K').value?parseT(g('K').value):null;if(g('K').value&&!(k5>600&&k5<4200)){st.className='status err';st.textContent='Escribe tu tiempo de 5 km, por ejemplo 2500 para 25:00.';return false}
   const kg=g('W').value?parseFloat(g('W').value.replace(',','.')):null;if(g('W').value&&!(kg>30&&kg<250)){st.className='status err';st.textContent='Revisa tu peso: solo el número en kg.';return false}
   const p={nick,div:g('D').value,level:g('L').value,goal:g('G').value,k5:k5||null,kg:kg||null,at:Date.now()};
   st.className='status';st.textContent='Guardando…';
@@ -2138,9 +2138,9 @@ function renderPlan(){
   const lastSim=sims.length?sims[sims.length-1].total:null;
   const form=`<section class="card" style="margin-bottom:16px"><h3>${cfg?'Cambiar mi plan':'Arma tu plan'}</h3><p class="lede" style="font-size:13px">Dime cuándo es tu competencia y qué tiempo quieres hacer. La app arma tus semanas por fases y se ajusta con tus simulacros.</p>
     <form id="planForm" class="rform"><label for="plRace">Fecha de la competencia<input type="date" id="plRace" value="${cfg?cfg.race:addDays(todayKey(),84)}"></label>
-    <label for="plGoal">Tiempo meta<input type="text" id="plGoal" inputmode="numeric" value="${cfg?fmtT(cfg.goal):GOAL?fmtT(GOAL):''}" placeholder="1:15:00"></label>
+    <label for="plGoal">Tiempo meta<input type="text" id="plGoal" data-tm inputmode="numeric" value="${cfg?fmtT(cfg.goal):GOAL?fmtT(GOAL):''}" placeholder="1:15:00"></label>
     <label for="plDays">Días por semana<select id="plDays">${[3,4,5].map(d=>`<option value="${d}"${(cfg?cfg.days:4)===d?' selected':''}>${d} días</option>`).join('')}</select></label>
-    <label for="plCur">Tu tiempo actual${lastSim?' (tu último simulacro)':' estimado'}<input type="text" id="plCur" inputmode="numeric" value="${cfg?fmtT(cfg.est0):lastSim?fmtT(lastSim):PROFILE&&PROFILE.k5?fmtT(estFrom5k(PROFILE.k5,PROFILE.level)):''}" placeholder="1:25:00"></label>
+    <label for="plCur">Tu tiempo actual${lastSim?' (tu último simulacro)':' estimado'}<input type="text" id="plCur" data-tm inputmode="numeric" value="${cfg?fmtT(cfg.est0):lastSim?fmtT(lastSim):PROFILE&&PROFILE.k5?fmtT(estFrom5k(PROFILE.k5,PROFILE.level)):''}" placeholder="1:25:00"></label>
     <div class="actions" style="margin-top:0"><button class="btn main" type="submit">${cfg?'Recalcular plan':'Crear mi plan'}</button><span class="status" id="plSt" role="status"></span></div></form>
     ${!lastSim?'<p class="status" style="margin:8px 0 0">¿No sabes tu tiempo actual? Pon tu tiempo de 5 km en tu perfil y la app lo estima.</p>':''}</section>`;
   if(!cfg){el.innerHTML=form+scienceHTML();return}
@@ -2359,6 +2359,15 @@ async function saveShare(fromShare){
     st.className='status ok';st.textContent=fromShare?'Se guardó la imagen; súbela desde tu galería.':'Imagen guardada.'}
   catch(e){st.className='status err';st.textContent='Mantén presionada la imagen para guardarla.'}
 }
+
+/* ---------- tiempos: el cliente escribe solo números y la app pone los dos puntos ---------- */
+function fmtDigits(v){let d=String(v||'').replace(/\D/g,'').replace(/^0+(?=\d{3})/,'').slice(0,6);
+  if(d.length<=2)return d;const sec=d.slice(-2),rest=d.slice(0,-2);
+  return rest.length<=2?rest+':'+sec:rest.slice(0,-2)+':'+rest.slice(-2)+':'+sec}
+document.addEventListener('input',e=>{const t=e.target;if(!t||!t.matches||!t.matches('input[data-tm]'))return;
+  const f=fmtDigits(t.value);if(f!==t.value)t.value=f},true);
+document.addEventListener('blur',e=>{const t=e.target;if(!t||!t.matches||!t.matches('input[data-tm]'))return;
+  if(/^\d{1,2}$/.test(t.value)){t.value=t.value+':00';t.dispatchEvent(new Event('input',{bubbles:true}))}},true);
 
 /* ---------- modo local: guarda en el celular si no hay cuenta ---------- */
 let LOCALMODE=false;

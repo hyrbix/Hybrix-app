@@ -289,6 +289,28 @@ img.photo{display:block;height:auto;aspect-ratio:4/3;object-fit:cover;border-rad
 .sty-clasico i{background:linear-gradient(135deg,#13212C 50%,#6FC2B7 50%)}
 .sty-impacto i{background:linear-gradient(135deg,#050708 50%,#D4FF3A 50%)}
 .sty-claro i{background:linear-gradient(135deg,#F4F1EA 50%,#FF6A3D 50%);border:1px solid #cfd6db}
+.hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.hstats>div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mute);line-height:1.3}
+.hstats b{display:block;font-family:var(--num);font-size:30px;color:var(--ink);line-height:1.1;margin-top:2px}
+.hfilt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.hfilt button{background:var(--panel);border:1px solid var(--line);border-radius:999px;color:var(--mute);padding:7px 14px;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.hfilt button[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
+.hlist{display:flex;flex-direction:column;gap:10px}
+.hday{margin:10px 0 0;color:var(--teal);font-size:13px}
+.hday:first-letter{text-transform:uppercase}
+.hcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.hrow{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.hmain{min-width:0}
+.hk{font-size:12px;color:var(--mute);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.ht{font-weight:800;font-size:17px;overflow-wrap:anywhere}
+.htot{font-family:var(--num);font-weight:700;font-size:30px;color:var(--teal);line-height:1;white-space:nowrap}
+.hdet{display:flex;flex-wrap:wrap;gap:6px}
+.hdet span{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:13px;color:var(--mute)}
+.hdet b{color:var(--ink);font-family:var(--num);font-size:15px;margin-left:2px}
+.hact{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hact .del{margin-left:auto}
+.hsbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:620px;width:100%;max-height:100%;overflow:auto;padding:18px;display:grid}
+.hsbox .sharebox{margin-top:0;border-top:none;padding-top:0}
 .sharebox{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
 .sharehead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .seg2{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -486,6 +508,7 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
   </header>
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" data-v="hoy" aria-selected="true">WOD del gym</button>
+    <button class="tab" role="tab" data-v="hist" aria-selected="false">Últimos entrenamientos</button>
     <button class="tab" role="tab" data-v="plan" aria-selected="false">Mi plan</button>
     <button class="tab" role="tab" data-v="prg" aria-selected="false">Programas</button>
     <button class="tab" role="tab" data-v="gen" aria-selected="false">Generar</button>
@@ -593,6 +616,11 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
       <div id="coachPhotos"></div>
     </section>
 
+    <section id="v-hist" class="view" hidden>
+      <div class="vhead"><div><h2>Últimos entrenamientos</h2><p class="lede">Todo lo que has entrenado, del más reciente al más viejo. Repite un entreno o compártelo otra vez.</p></div></div>
+      <div id="histBody"></div>
+    </section>
+
     <section id="v-prog" class="view" hidden>
       <div class="vhead"><div><h2>Mi progreso</h2><p class="lede">Solo tú ves tu historial completo. Tu coach ve tu asistencia y el nombre y tiempo de cada entreno.</p></div></div>
       <div id="progBody"></div>
@@ -611,6 +639,7 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
     <p class="lede">Así llevamos tus récords, tu progreso y tu lugar en el pizarrón. Solo tú y tu coach ven tus datos.</p><div id="onbBody"></div>
     <div class="actions"><button class="btn ghost" type="button" id="onbSkip">Ahora no</button></div></div>
 </div>
+<div id="hshare" class="how" hidden role="dialog" aria-modal="true" aria-label="Compartir entrenamiento"><div class="hsbox"><button class="btn ghost" type="button" id="hshareClose" style="justify-self:end">Cerrar</button><div id="hshareBody"></div></div></div>
 <div id="how" class="how" hidden role="dialog" aria-modal="true" aria-labelledby="howName">
   <div class="howbox">
     <button class="btn ghost hclose" type="button" id="howClose">Cerrar</button>
@@ -1593,6 +1622,7 @@ function lineChart(pts,title){
   ${pts.length>1?`<text class="ax" x="${X(pts.length-1)}" y="${H-10}" text-anchor="end">${fmtD(last.at)}</text>`:''}</svg></div>`;
 }
 function renderProg(){
+  renderHist();
   const el=$('#progBody');
   const pcard=profileCardHTML();
   if(!DB||!UID){el.innerHTML=`<div class="empty"><strong>Entra con tu cuenta</strong>Tus tiempos se guardan en tu cuenta y solo tú los ves.</div>`;return}
@@ -2263,12 +2293,14 @@ document.addEventListener('click',e=>{
 /* ---------- compartir resultado (imagen para Instagram / Facebook) ---------- */
 const SHARE={fmt:'post',style:(()=>{try{return localStorage.getItem('hx-shstyle')||'clasico'}catch(e){return 'clasico'}})(),blob:null,url:''};
 function shareRows(){
+  if(P.result&&P.result._hist)return (P.result.rows||[]).map(x=>Object.assign({},x));
   const rows=[],by={};
-  const add=(st,t)=>{if(!st||st.k==='_tr'||st.k==='rest'||!ST[st.k])return;const f=info(st);
+  const add=(st,t)=>{if(!st||st.k==='_tr'||st.k==='rest'||st.k==='easy'||!ST[st.k])return;const f=info(st);
     let r=by[st.k];if(!r){r=by[st.k]={k:st.k,pic:f.pic,name:f.name,amt:f.amt,n:0,t:0,has:false};rows.push(r)}
     r.n++;if(t!=null&&isFinite(t)&&t>0){r.t+=t;r.has=true}};
   const wk=P.wk;if(!wk)return rows;const mixed=wk.blocks.some(b=>b.kind!=='timed');
   wk.blocks.forEach((b,bi)=>{
+    if(/calentamiento|enfriamiento/i.test(b.name||''))return;
     if(b.kind==='race'){b.steps.forEach((s,i)=>{const t=P.race[i]!=null?P.race[i]-(P.race[i-1]||0):null;if(i<P.race.length)add(s,t)})}
     else if(b.kind==='round'){b.steps.forEach((s,i)=>add(s,(P.ex||{})[bi+':'+i]))}
     else if(!mixed){const reached=bi<P.idx||P.finished;if(reached)b.steps.forEach(s=>add(s,s.dur))}
@@ -2359,9 +2391,11 @@ async function drawShareClasico(fmt){
   c.fillText(`ENTRENÉ EN ${name.toUpperCase()}`.split('').join(String.fromCharCode(8202)),W/2,fy+4);
   return await new Promise(res=>cv.toBlob(b=>res(b),'image/png'));
 }
-async function openShare(){
+async function openShare(host){
+  if(host)SHARE.host=host;if(!SHARE.host||!SHARE.host.isConnected)SHARE.host=$('#pDone');
   let box=$('#pShare');
-  if(!box){box=document.createElement('div');box.id='pShare';box.className='sharebox';$('#pDone').appendChild(box)}
+  if(box&&box.parentNode!==SHARE.host){box.remove();box=null}
+  if(!box){box=document.createElement('div');box.id='pShare';box.className='sharebox';SHARE.host.appendChild(box)}
   box.hidden=false;
   box.innerHTML=`<div class="sharehead"><h3>Compartir resultado</h3><div class="seg2" role="group" aria-label="Tamaño"><button type="button" data-fmt="post" class="${SHARE.fmt==='post'?'on':''}">Post</button><button type="button" data-fmt="story" class="${SHARE.fmt==='story'?'on':''}">Historia</button></div></div>
     <div class="shstyles" role="group" aria-label="Estilo">${SHSTYLES.map(([k,t])=>`<button type="button" data-sty="${k}" class="sty-${k}${SHARE.style===k?' on':''}"><i></i>${t}</button>`).join('')}</div>
@@ -2478,6 +2512,46 @@ async function drawShareClaro(fmt){
   c.fillStyle=teal;c.fillRect(W/2-60,fy+18,120,6);
   return await new Promise(res=>cv.toBlob(b=>res(b),'image/png'));
 }
+/* ---------- Últimos entrenamientos ---------- */
+let HFILT='all';
+const HKINDS=[['all','Todos'],['intervalos','Intervalos'],['fuerza','Fuerza'],['simulacro','Simulacro'],['programa','Programas'],['movilidad','Estirar']];
+const KLAB={intervalos:'Intervalos',fuerza:'Fuerza',simulacro:'Simulacro',programa:'Programa',movilidad:'Estirar'};
+function dayLabel(at){const d=new Date(at),t=new Date();const k=x=>x.getFullYear()+'-'+x.getMonth()+'-'+x.getDate();
+  if(k(d)===k(t))return 'Hoy';const y=new Date(t);y.setDate(t.getDate()-1);if(k(d)===k(y))return 'Ayer';
+  return d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})}
+function sessTotalTxt(s){return s.kind==='programa'?(s.volume?s.volume.toLocaleString('es-MX')+' kg':(s.sets||0)+' series'):s.kind==='fuerza'&&s.weight?fmtT(s.total)+' · '+s.weight+' kg':fmtT(s.total)}
+function renderHist(){
+  const el=$('#histBody');if(!el)return;
+  if(!DB||!UID){el.innerHTML=`<div class="empty"><strong>Entra con tu cuenta</strong>Así se guardan tus entrenamientos y aquí ves tu historial.</div>`;return}
+  if(SESS===null){el.innerHTML=`<div class="empty">Cargando tus entrenamientos…</div>`;return}
+  const now=Date.now(),wk=SESS.filter(s=>now-s.at<7*864e5),mo=SESS.filter(s=>now-s.at<30*864e5);
+  const mins=Math.round(mo.reduce((a,s)=>a+(s.kind==='programa'?0:(s.total||0)),0)/60);
+  const list=SESS.filter(s=>HFILT==='all'||s.kind===HFILT);
+  let html=`<div class="hstats"><div>Esta semana<b>${wk.length}</b></div><div>Últimos 30 días<b>${mo.length}</b></div><div>Minutos en 30 días<b>${mins}</b></div></div>
+    <div class="hfilt" role="group" aria-label="Filtrar">${HKINDS.map(([k,t])=>`<button type="button" data-hf="${k}" aria-pressed="${HFILT===k}">${t}</button>`).join('')}</div>`;
+  if(!list.length){el.innerHTML=html+`<div class="empty"><strong>Aún no hay entrenamientos aquí</strong>Al terminar un entreno toca "Guardar en mi progreso" y aparecerá en esta lista.</div>`;return}
+  let last='';html+='<div class="hlist">';
+  list.slice(0,120).forEach(s=>{const dl=dayLabel(s.at);if(dl!==last){html+=`<h3 class="hday">${esc(dl)}</h3>`;last=dl}
+    const rows=(s.rows||[]).slice(0,8),hasWk=!!(s.wk&&s.wk.blocks);
+    const det=s.kind==='programa'&&s.logs?Object.values(s.logs).map(l=>`<span>${esc((ST[l.k]||{}).name||l.k)} <b>${l.sets.length}×${esc(l.sets[0].r)}${l.sets[0].kg?' @ '+esc(l.sets[0].kg)+' kg':''}</b></span>`).join('')
+      :rows.length?rows.map(x=>`<span>${esc(x.name)} <b>${x.has?fmtT(x.t):esc((x.n>1?x.n+'× ':'')+(x.amt||''))}</b></span>`).join('')
+      :(s.splits||[]).map(x=>`<span>${esc(x.label)} <b>${fmtT(x.t)}</b></span>`).join('');
+    html+=`<article class="hcard"><div class="hrow"><div class="hmain"><div class="hk">${esc(KLAB[s.kind]||'Entreno')} · ${esc(DIVS[s.div]||'')} · ${new Date(s.at).toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'})}</div>
+      <div class="ht">${esc(s.title)}</div></div><div class="htot">${esc(sessTotalTxt(s))}</div></div>
+      ${det?`<div class="hdet">${det}</div>`:''}
+      <div class="hact">${hasWk?`<button class="btn" type="button" data-hrep="${esc(s._id)}">Repetir</button>`:''}${rows.length?`<button class="btn" type="button" data-hsh="${esc(s._id)}">Compartir</button>`:''}<button class="del" type="button" data-id="${esc(s._id)}">Borrar</button></div></article>`});
+  el.innerHTML=html+'</div>'+(list.length>120?`<p class="status">Se muestran los 120 más recientes.</p>`:'');
+}
+$('#histBody').addEventListener('click',async e=>{
+  const f=e.target.closest('[data-hf]');if(f){HFILT=f.dataset.hf;renderHist();return}
+  const rp=e.target.closest('[data-hrep]');if(rp){const s=SESS.find(x=>x._id===rp.dataset.hrep);if(s&&s.wk)openPlayer(JSON.parse(JSON.stringify(s.wk)),s.wodId?'gym':'gen');return}
+  const sh=e.target.closest('[data-hsh]');if(sh){const s=SESS.find(x=>x._id===sh.dataset.hsh);if(!s)return;
+    P.result=Object.assign({},s,{_hist:true});$('#hshare').hidden=false;openShare($('#hshareBody'));return}
+  const b=e.target.closest('.del');if(!b)return;
+  if(!b.classList.contains('confirm')){b.classList.add('confirm');b.textContent='¿Borrar? Sí';setTimeout(()=>{if(b.isConnected){b.classList.remove('confirm');b.textContent='Borrar'}},4000);return}
+  b.disabled=true;try{await DB.doc(`data/users/${UID}/sessions/${b.dataset.id}`).delete()}catch(err){b.disabled=false;b.textContent='No se pudo'}
+});
+document.addEventListener('click',e=>{if(e.target.id==='hshare'||e.target.closest('#hshareClose')){$('#hshare').hidden=true;const bx=$('#pShare');if(bx)bx.remove()}});
 
 /* ---------- tiempos: el cliente escribe solo números y la app pone los dos puntos ---------- */
 function fmtDigits(v){let d=String(v||'').replace(/\D/g,'').replace(/^0+(?=\d{3})/,'').slice(0,6);
@@ -2696,6 +2770,7 @@ function finishP(){
   else{splits=P.rounds.map((bi,k)=>({label:'R'+(k+1),t:P.rs[bi]??P.wk.blocks[bi].dur}));total=splits.reduce((a,s)=>a+s.t,0)}
   if(P.onDone){try{P.onDone(total)}catch(e){}}
   P.result={title:P.wk.title,kind:P.wk.kind,div:DIV,minutes:P.wk.minutes||null,total,splits,wodId:P.source==='gym'?P.wk.id:null,at:Date.now(),src:'app'};
+  try{P.result.rows=shareRows().map(x=>({k:x.k,pic:x.pic,name:x.name,amt:x.amt||'',n:x.n,t:Math.round(x.t),has:x.has}));P.result.wk=JSON.parse(JSON.stringify({title:P.wk.title,kind:P.wk.kind,minutes:P.wk.minutes||null,quiet:P.wk.quiet||false,blocks:P.wk.blocks.map(b=>Object.assign({},b,{steps:b.steps.filter(x=>x.k!=='_tr')}))}))}catch(e){}
   $('#pStage').hidden=true;$('#pStrip').hidden=true;
   const canSave=DB&&UID,gym=P.source==='gym'&&!P.isRace;
   $('#pDone').innerHTML=`<div class="eyebrow">${esc(P.wk.title)} · ${esc(DIVS[DIV])}</div>
@@ -2706,7 +2781,7 @@ function finishP(){
       <div class="actions" style="margin-top:0"><button class="btn main" id="pSave" type="button">Guardar en mi progreso</button><button class="btn" id="pShareBtn" type="button">Compartir resultado</button><button class="btn" id="pClose2" type="button">Cerrar</button><span class="status" id="pSaveSt" role="status"></span></div>`
     :`<p class="status">Para guardar tus tiempos abre la app con tu cuenta.</p><div class="actions" style="margin-top:0"><button class="btn main" id="pShareBtn" type="button">Compartir resultado</button><button class="btn" id="pClose2" type="button">Cerrar</button></div>`}`;
   $('#pDone').hidden=false;
-  $('#pClose2').addEventListener('click',closePlayer);$('#pShareBtn').addEventListener('click',openShare);
+  $('#pClose2').addEventListener('click',closePlayer);$('#pShareBtn').addEventListener('click',()=>{if(P.result)delete P.result._hist;openShare($('#pDone'))});
   const sv=$('#pSave');if(sv)sv.addEventListener('click',async()=>{const st=$('#pSaveSt');sv.disabled=true;st.className='status';st.textContent='Guardando…';
     const wi=$('#pWeight');if(wi){const w=parseFloat((wi.value||'').replace(',','.'));if(!isNaN(w)&&w>0)P.result.weight=w}
     const prs=detectPR(P.result,SESS||[]);

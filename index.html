@@ -311,6 +311,42 @@ img.photo{display:block;height:auto;aspect-ratio:4/3;object-fit:cover;border-rad
 .hact .del{margin-left:auto}
 .hsbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:620px;width:100%;max-height:100%;overflow:auto;padding:18px;display:grid}
 .hsbox .sharebox{margin-top:0;border-top:none;padding-top:0}
+.tlist{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tlist li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.tlist li b{font-weight:800}.tlist li span{color:var(--mute);font-size:13px;flex:1 1 160px;min-width:0}.tlist li .okt,.tlist li .warnt{flex:0 0 auto}
+.grpform{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.grpform input[type=text],.cbform input[type=text],.cbform input[type=date],.cbform input[type=number],.cbform select,.cbform textarea,#compForm input,#compForm select,#compForm textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:var(--ink);font:inherit;font-size:15px}
+.cbform textarea,#compForm textarea{font-family:inherit;font-size:14px}
+.gchk{display:flex;flex-wrap:wrap;gap:6px 14px}.gchk label{display:inline-flex;gap:6px;align-items:center;font-size:14px}
+.cbgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin-bottom:12px}
+.cbgrid label,.cbrow0 label,.cbsrc,.cbform>label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.cbgrid .wide{grid-column:1/-1}
+.cbmode{margin-bottom:12px}
+.cbrow0{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}.cbrow0 label{width:110px}
+.cbrow0 label.chk{flex-direction:row;align-items:center;width:auto;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);font-weight:600}
+.cbrows{margin:0 0 10px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.cbrows li{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:6px;align-items:center}
+.cbrows li::marker{color:var(--teal);font-weight:800}
+.cbprev{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.cnote{margin:0;font-style:italic;color:var(--ink);background:var(--panel2);border-left:3px solid var(--teal);padding:6px 10px;border-radius:0 6px 6px 0}
+.hcard.isdone{opacity:.75}
+.compban{margin-bottom:16px;border-color:var(--teal)}
+.cbhead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.cdown{text-align:center;background:var(--teal);color:var(--on-teal);border-radius:12px;padding:10px 18px;min-width:120px}
+.cdown b{display:block;font-family:var(--num);font-size:54px;line-height:.95}.cdown span{font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.06em}.cdown small{display:block;font-size:12px;opacity:.8}
+.cstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 8px}
+.cstats>div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.cstats span{display:block;font-size:12px;color:var(--mute)}.cstats b{font-family:var(--num);font-size:26px}.cstats small{font-size:14px;color:var(--mute);font-weight:600}
+.cbar{display:block;height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}.cbar i{display:block;height:100%;background:var(--teal)}
+.compgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.compcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.compcard.mine{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal) inset}
+.compcard h3{font-size:18px;letter-spacing:.02em}
+.ctype{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+.cmeta{margin:0;color:var(--mute);font-size:14px}.cdesc{margin:0;font-size:14px}
+.cfoot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:auto;padding-top:6px}.cdays{flex:1 1 auto;font-size:14px;color:var(--mute)}.cdays b{font-family:var(--num);font-size:22px;color:var(--ink)}
+#compForm{margin:10px 0 0}
+@media (max-width:620px){.cbgrid{grid-template-columns:minmax(0,1fr)}.cstats{gap:6px}.cstats>div{padding:8px}.cstats b{font-size:20px}.cstats small{display:block;font-size:12px}.cbrows li{grid-template-columns:minmax(0,1fr) 92px auto}}
 .sharebox{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
 .sharehead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .seg2{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -509,7 +545,9 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" data-v="hoy" aria-selected="true">WOD del gym</button>
     <button class="tab" role="tab" data-v="hist" aria-selected="false">Últimos entrenamientos</button>
+    <button class="tab" role="tab" data-v="mic" aria-selected="false">Mi coach</button>
     <button class="tab" role="tab" data-v="plan" aria-selected="false">Mi plan</button>
+    <button class="tab" role="tab" data-v="comp" aria-selected="false">Competencias</button>
     <button class="tab" role="tab" data-v="prg" aria-selected="false">Programas</button>
     <button class="tab" role="tab" data-v="gen" aria-selected="false">Generar</button>
     <button class="tab" role="tab" data-v="fza" aria-selected="false">Fuerza</button>
@@ -611,7 +649,8 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
     </section>
 
     <section id="v-coach" class="view" hidden>
-      <div class="vhead"><div><h2>Panel del coach</h2><p class="lede">Asistencia de tus socios, plan del mes, marca y equipo del gym. Solo lo ven coaches y editores.</p></div></div>
+      <div class="vhead"><div><h2>Panel del coach</h2><p class="lede">Tus atletas y grupos, entrenos asignados, asistencia, plan del mes, marca y equipo del gym. Solo lo ven coaches.</p></div></div>
+      <div id="coachTeam"></div>
       <div id="coachBody"></div>
       <div id="coachPhotos"></div>
     </section>
@@ -619,6 +658,16 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
     <section id="v-hist" class="view" hidden>
       <div class="vhead"><div><h2>Últimos entrenamientos</h2><p class="lede">Todo lo que has entrenado, del más reciente al más viejo. Repite un entreno o compártelo otra vez.</p></div></div>
       <div id="histBody"></div>
+    </section>
+
+    <section id="v-mic" class="view" hidden>
+      <div class="vhead"><div><h2>Mi coach</h2><p class="lede">Los entrenamientos que tu coach te manda a ti o a tu grupo, con fecha y notas.</p></div></div>
+      <div id="micBody"></div>
+    </section>
+
+    <section id="v-comp" class="view" hidden>
+      <div class="vhead"><div><h2>Competencias</h2><p class="lede">Elige tu competencia y la app cuenta los días, ajusta tu plan y mide cómo vas entrenando.</p></div></div>
+      <div id="compBody"></div>
     </section>
 
     <section id="v-prog" class="view" hidden>
@@ -1684,7 +1733,7 @@ document.addEventListener('click',e=>{const h=e.target.closest('[data-how]');if(
 window.addEventListener('keydown',e=>{
   if(!$('#how').hidden){if(e.key==='Escape'||e.key==='Enter'&&e.target.id==='howClose'){e.preventDefault();e.stopImmediatePropagation();closeHow()}else if(e.key===' '||e.key.startsWith('Arrow')){e.stopImmediatePropagation()}return}
   const t=e.target.closest&&e.target.closest('.tile[data-how]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openHow(t.dataset.how)}},true);
-function renderAll(){applyBrand();renderPlan();renderLib();maybeOnboard();$('[data-v=coach]').hidden=!COACH;renderPace();renderRetos();renderCoach();renderPhotoAdmin();renderProgs();renderGen();renderFza();renderMov();renderSim();renderHoy();renderProg();if(!$('#player').hidden){P.lastKey='';P.lastStrip='';renderP()}}
+function renderAll(){applyBrand();renderPlan();renderLib();maybeOnboard();$('[data-v=coach]').hidden=!isCoachUser();renderTeam();renderMiCoach();renderComps();renderPace();renderRetos();renderCoach();renderPhotoAdmin();renderProgs();renderGen();renderFza();renderMov();renderSim();renderHoy();renderProg();if(!$('#player').hidden){P.lastKey='';P.lastStrip='';renderP()}}
 
 /* ---------- ritmo de carrera ---------- */
 const PSH={run:.47,rox:.06,ski:.063,sled:.047,pull:.067,bbj:.067,row:.067,farmers:.027,lunges:.06,wallball:.087};
@@ -2198,16 +2247,16 @@ function renderPlan(){
   const cfg=MYPLAN,sims=fullSims();
   const lastSim=sims.length?sims[sims.length-1].total:null;
   const form=`<section class="card" style="margin-bottom:16px"><h3>${cfg?'Cambiar mi plan':'Arma tu plan'}</h3><p class="lede" style="font-size:13px">Dime cuándo es tu competencia y qué tiempo quieres hacer. La app arma tus semanas por fases y se ajusta con tus simulacros.</p>
-    <form id="planForm" class="rform"><label for="plRace">Fecha de la competencia<input type="date" id="plRace" value="${cfg?cfg.race:addDays(todayKey(),84)}"></label>
+    <form id="planForm" class="rform"><label for="plRace">Fecha de la competencia<input type="date" id="plRace" value="${cfg?cfg.race:MYCOMP?MYCOMP.date:addDays(todayKey(),84)}"></label>
     <label for="plGoal">Tiempo meta<input type="text" id="plGoal" data-tm inputmode="numeric" value="${cfg?fmtT(cfg.goal):GOAL?fmtT(GOAL):''}" placeholder="1:15:00"></label>
     <label for="plDays">Días por semana<select id="plDays">${[3,4,5].map(d=>`<option value="${d}"${(cfg?cfg.days:4)===d?' selected':''}>${d} días</option>`).join('')}</select></label>
     <label for="plCur">Tu tiempo actual${lastSim?' (tu último simulacro)':' estimado'}<input type="text" id="plCur" data-tm inputmode="numeric" value="${cfg?fmtT(cfg.est0):lastSim?fmtT(lastSim):PROFILE&&PROFILE.k5?fmtT(estFrom5k(PROFILE.k5,PROFILE.level)):''}" placeholder="1:25:00"></label>
     <div class="actions" style="margin-top:0"><button class="btn main" type="submit">${cfg?'Recalcular plan':'Crear mi plan'}</button><span class="status" id="plSt" role="status"></span></div></form>
     ${!lastSim?'<p class="status" style="margin:8px 0 0">¿No sabes tu tiempo actual? Pon tu tiempo de 5 km en tu perfil y la app lo estima.</p>':''}</section>`;
-  if(!cfg){el.innerHTML=form+scienceHTML();return}
+  if(!cfg){el.innerHTML=compBanner()+form+scienceHTML();return}
   const pr=PROGS.mine||buildMyPlan(cfg),sched=planSchedule(cfg),st=planStatus(cfg),pc=planPaces(cfg.goal),daysLeft=Math.ceil((new Date(cfg.race+'T08:00:00')-Date.now())/864e5),weak=weakStation();
   const gap=(cfg.est0-cfg.goal)/cfg.est0,maxImp=Math.min(.15,cfg.weeks*.012),warn=gap>maxImp;
-  el.innerHTML=`<section class="card plancard" style="margin-bottom:16px">
+  el.innerHTML=compBanner()+`<section class="card plancard" style="margin-bottom:16px">
     <div class="planhead"><div><div class="eyebrow" style="font-size:13px">Semana ${st.w} de ${cfg.weeks} · Fase ${PHN[sched[st.w-1]]}</div><h2>${daysLeft>0?`Faltan ${daysLeft} días`:daysLeft===0?'Hoy es la competencia':'La competencia ya pasó'}</h2><p class="lede">${esc(PHD[sched[st.w-1]])}</p></div>
       <button class="btn main" type="button" id="plOpen">Ver mi semana</button></div>
     <div class="phbar">${sched.map((p,i)=>`<i class="ph-${p}${i+1===st.w?' cur':''}${i+1<st.w?' past':''}" title="Semana ${i+1}: ${PHN[p]}"></i>`).join('')}</div>
@@ -2552,6 +2601,205 @@ $('#histBody').addEventListener('click',async e=>{
   b.disabled=true;try{await DB.doc(`data/users/${UID}/sessions/${b.dataset.id}`).delete()}catch(err){b.disabled=false;b.textContent='No se pudo'}
 });
 document.addEventListener('click',e=>{if(e.target.id==='hshare'||e.target.closest('#hshareClose')){$('#hshare').hidden=true;const bx=$('#pShare');if(bx)bx.remove()}});
+/* ---------- coaches: atletas, grupos y entrenos asignados ---------- */
+let STAFF={coaches:{}},TEAM={athletes:[],groups:{}},MYASSIGN={items:{}},ALLASSIGN={},COMPS={list:[]},MYCOMP=lsGet('mycomp',null);
+const isCoachUser=()=>!!(COACH||(UID&&STAFF.coaches&&STAFF.coaches[UID]));
+const NOEX=new Set(['wbike','wmob','wsquat','wwb','cbike','cstretch','easy']);
+const exOptions=()=>Object.entries(ST).filter(([k,d])=>!NOEX.has(k)&&d&&d.name&&!/^b_/.test(k)).sort((a,b)=>a[1].name.localeCompare(b[1].name,'es'));
+const members=()=>BOARD.filter(b=>b.nick&&b.id!==UID).map(b=>({id:b.id,nick:b.nick})).sort((a,b)=>a.nick.localeCompare(b.nick,'es'));
+const uidList=v=>Array.isArray(v)?v:[];
+let CBMSG=null,CBPV=false;
+let CB={who:'',date:'',title:'',mode:'rounds',rounds:3,mins:12,src:'gen',wu:true,note:'',rows:[{k:'run',amt:'400 m'},{k:'wallball',amt:'20 reps'},{k:'row',amt:'500 m'}]};
+try{const s=lsGet('coachdraft',null);if(s&&Array.isArray(s.rows))CB=Object.assign(CB,s)}catch(e){}
+
+function buildCoachWk(){
+  const title=(CB.title||'').trim()||'Entreno de tu coach';
+  if(CB.mode==='src'){const base=CB.src==='fza'?FZAWK:CB.src==='lib'?LIBWK:CB.src==='sim'?buildSim(SIMPART||'full'):GENWK;
+    if(!base)return null;const w=JSON.parse(JSON.stringify(base));if(CB.title)w.title=title;return w}
+  const rows=CB.rows.filter(r=>r.k&&ST[r.k]);if(!rows.length)return null;
+  const blocks=CB.wu?[warm()]:[];
+  if(CB.mode==='emom'){const m=Math.max(4,Math.min(40,+CB.mins||12)),steps=[];for(let i=0;i<m;i++){const r=rows[i%rows.length];steps.push({k:r.k,amt:r.amt||ST[r.k].amt,dur:60})}
+    blocks.push({kind:'timed',name:`EMOM ${m} min`,short:'EMOM',dur:m*60,steps})}
+  else{const n=Math.max(1,Math.min(10,+CB.rounds||3));const steps=rows.map(r=>({k:r.k,amt:r.amt||ST[r.k].amt}));
+    const work=steps.reduce((a,x)=>a+estSec(x.k,x.amt),0)+TR*(steps.length-1),target=r30(work*1.15);
+    for(let i=0;i<n;i++)blocks.push({kind:'round',name:`Ronda ${i+1}`,dur:target+60,target,steps:JSON.parse(JSON.stringify(steps))})}
+  if(CB.wu)blocks.push(cool());
+  const mins=Math.round(blocks.reduce((a,b)=>a+b.dur,0)/60);
+  return {id:'c'+Date.now().toString(36),title,kind:CB.mode==='emom'?'fuerza':'intervalos',minutes:mins,blocks};
+}
+function targetsOf(who){if(!who)return [];if(who.startsWith('g:')){const g=(TEAM.groups||{})[who.slice(2)];return g?uidList(g.members):[]}return [who.slice(2)]}
+async function assignTo(uids,wk,date,note,groupName){
+  const id='a'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);let ok=0;
+  for(const u of uids){try{const ref=DB.doc(`assign/${u}`),s=await ref.get(),body=s.exists?JSON.parse(JSON.stringify(s.data())):{};body.items=body.items||{};
+    body.items[id]={id,date,wk,note:note||'',by:UID,byNick:(PROFILE&&PROFILE.nick)||nickOf(UID)||'Coach',group:groupName||null,at:Date.now()};
+    const keys=Object.keys(body.items).sort((a,b)=>(body.items[b].at||0)-(body.items[a].at||0));keys.slice(60).forEach(k=>delete body.items[k]);
+    await ref.set(body);ok++}catch(e){}}
+  return ok;
+}
+async function saveTeam(){await DB.doc(`teams/${UID}`).set(JSON.parse(JSON.stringify(TEAM)))}
+
+function renderTeam(){
+  const el=$('#coachTeam');if(!el)return;
+  if(!isCoachUser()||!DB||!UID){el.innerHTML='';return}
+  const mem=members(),ath=uidList(TEAM.athletes),groups=TEAM.groups||{},exo=exOptions();
+  const free=mem.filter(m=>!ath.includes(m.id));
+  const stat=u=>{const it=Object.values(((ALLASSIGN[u]||{}).items)||{}).filter(x=>x.by===UID);return {n:it.length,done:it.filter(x=>x.done).length,pend:it.filter(x=>!x.done).length}};
+  const wk=buildCoachWk();
+  const recent=[];ath.forEach(u=>Object.values(((ALLASSIGN[u]||{}).items)||{}).forEach(x=>{if(x.by===UID)recent.push(Object.assign({u},x))}));
+  recent.sort((a,b)=>(b.at||0)-(a.at||0));
+  let html=`<section class="card" style="margin-bottom:16px"><h3>Mis atletas</h3>
+    <p class="lede" style="font-size:13px">Agrega a los socios que entrenas. Aparecen los que ya crearon su perfil en la app.</p>
+    ${free.length?`<div class="wfield"><label class="flabel" for="cAdd">Agregar atleta</label><select id="cAdd"><option value="">Elige un socio…</option>${free.map(m=>`<option value="${esc(m.id)}">${esc(m.nick)}</option>`).join('')}</select><button class="btn main" type="button" id="cAddGo">Agregar</button></div>`:`<p class="status">${mem.length?'Ya agregaste a todos los socios con perfil.':'Todavía no hay socios con perfil. Pídeles que abran la app y guarden su perfil.'}</p>`}
+    ${ath.length?`<ul class="tlist">${ath.map(u=>{const s=stat(u);return `<li><b>${esc(nickOf(u))}</b><span>${s.pend} pendientes · ${s.done} hechos</span><button class="del" type="button" data-rmath="${esc(u)}">Quitar</button></li>`}).join('')}</ul>`:''}
+  </section>
+  <section class="card" style="margin-bottom:16px"><h3>Grupos</h3>
+    ${Object.keys(groups).length?`<ul class="tlist">${Object.entries(groups).map(([g,v])=>`<li><b>${esc(v.name)}</b><span>${uidList(v.members).map(u=>esc(nickOf(u))).join(', ')||'Sin integrantes'}</span><button class="del" type="button" data-rmgrp="${esc(g)}">Borrar</button></li>`).join('')}</ul>`:'<p class="status" style="margin-top:0">Crea grupos para mandar el mismo entreno a varios atletas, por ejemplo "Pro 6 am" o "Principiantes".</p>'}
+    ${ath.length?`<form id="grpForm" class="grpform"><label for="gName" class="flabel">Nuevo grupo</label><input type="text" id="gName" placeholder="Nombre del grupo" autocomplete="off">
+      <div class="gchk">${ath.map(u=>`<label><input type="checkbox" value="${esc(u)}"> ${esc(nickOf(u))}</label>`).join('')}</div>
+      <div class="actions" style="margin-top:0"><button class="btn" type="submit">Crear grupo</button><span class="status" id="gSt" role="status"></span></div></form>`:''}
+  </section>
+  <section class="card" style="margin-bottom:16px"><h3>Asignar entrenamiento</h3>
+    ${ath.length?`<form id="cbForm" class="cbform">
+      <div class="cbgrid">
+        <label>Para<select id="cbWho"><option value="">Elige atleta o grupo…</option>${Object.entries(groups).length?`<optgroup label="Grupos">${Object.entries(groups).map(([g,v])=>`<option value="g:${esc(g)}"${CB.who==='g:'+g?' selected':''}>👥 ${esc(v.name)}</option>`).join('')}</optgroup>`:''}<optgroup label="Atletas">${ath.map(u=>`<option value="u:${esc(u)}"${CB.who==='u:'+u?' selected':''}>${esc(nickOf(u))}</option>`).join('')}</optgroup></select></label>
+        <label>Fecha<input type="date" id="cbDate" value="${esc(CB.date||todayKey())}"></label>
+        <label class="wide">Nombre del entreno<input type="text" id="cbTitle" value="${esc(CB.title)}" placeholder="Ej. Motor + piernas" autocomplete="off"></label>
+      </div>
+      <div class="seg2 cbmode" role="group" aria-label="Formato"><button type="button" data-cbm="rounds" class="${CB.mode==='rounds'?'on':''}">Rondas</button><button type="button" data-cbm="emom" class="${CB.mode==='emom'?'on':''}">EMOM</button><button type="button" data-cbm="src" class="${CB.mode==='src'?'on':''}">Uno ya hecho</button></div>
+      ${CB.mode==='src'?`<label class="cbsrc">Usar el que tienes en<select id="cbSrc">${[['gen','Generar'],['fza','Fuerza'],['lib','Biblioteca'],['sim','Simulacro']].map(([v,t])=>`<option value="${v}"${CB.src===v?' selected':''}>${t}</option>`).join('')}</select></label><p class="status" style="margin:0">Arma primero el entreno en esa pestaña y aquí se copia tal cual.</p>`
+      :`<div class="cbrow0">${CB.mode==='rounds'?`<label>Rondas<input type="number" id="cbRounds" min="1" max="10" value="${CB.rounds}"></label>`:`<label>Minutos<input type="number" id="cbMins" min="4" max="40" value="${CB.mins}"></label>`}<label class="chk"><input type="checkbox" id="cbWu"${CB.wu?' checked':''}> Calentamiento y enfriamiento</label></div>
+      <ol class="cbrows">${CB.rows.map((r,i)=>`<li><select data-cbk="${i}">${exo.map(([k,d])=>`<option value="${k}"${r.k===k?' selected':''}>${esc(d.name)}</option>`).join('')}</select><input type="text" data-cba="${i}" value="${esc(r.amt||'')}" placeholder="${esc((ST[r.k]||{}).amt||'reps, m o seg')}" autocomplete="off"><button class="del" type="button" data-cbrm="${i}" aria-label="Quitar ejercicio">✕</button></li>`).join('')}</ol>
+      <button class="btn" type="button" id="cbAddRow">+ Agregar ejercicio</button>`}
+      <label class="wide" style="display:block;margin-top:12px">Nota para el atleta (opcional)<textarea id="cbNote" rows="2" placeholder="Ej. Cuida el ritmo en la carrera, sled pesado.">${esc(CB.note)}</textarea></label>
+      <div class="cbprev">${wk?`<details${CBPV?' open':''} id="cbPv"><summary class="flabel">Ver vista previa · ${wk.minutes||Math.round(wk.blocks.reduce((a,b)=>a+b.dur,0)/60)} min</summary>${renderWorkout(wk)}</details>`:'<p class="status">Agrega al menos un ejercicio.</p>'}</div>
+      <div class="actions"><button class="btn main" type="submit">Asignar</button><span class="status${CBMSG?' '+CBMSG[0]:''}" id="cbSt" role="status">${CBMSG?esc(CBMSG[1]):''}</span></div>
+    </form>`:'<p class="status" style="margin:0">Primero agrega atletas.</p>'}
+  </section>`;
+  if(recent.length)html+=`<section class="card" style="margin-bottom:16px"><h3>Lo que has asignado</h3><ul class="tlist">${recent.slice(0,25).map(x=>`<li><b>${esc(nickOf(x.u))}</b><span>${esc(fmtD(new Date(x.date+'T12:00:00').getTime()))} · ${esc(x.wk&&x.wk.title||'')}${x.group?' · '+esc(x.group):''}</span><span class="${x.done?'okt':'warnt'}">${x.done?'Hecho'+(x.done.total?' · '+fmtT(x.done.total):''):'Pendiente'}</span><button class="del" type="button" data-rmas="${esc(x.u)}|${esc(x.id)}">Borrar</button></li>`).join('')}</ul></section>`;
+  if(COACH){const cs=STAFF.coaches||{};html+=`<section class="card" style="margin-bottom:16px"><h3>Coaches del gym</h3><p class="lede" style="font-size:13px">Solo tú (dueño) decides quién es coach. Un coach puede tener sus propios atletas y grupos y asignarles entrenos.</p>
+    ${Object.keys(cs).length?`<ul class="tlist">${Object.keys(cs).map(u=>`<li><b>${esc(nickOf(u)||cs[u])}</b><span>Coach</span><button class="del" type="button" data-rmcoach="${esc(u)}">Quitar</button></li>`).join('')}</ul>`:''}
+    ${mem.filter(m=>!cs[m.id]).length?`<div class="wfield"><label class="flabel" for="csAdd">Hacer coach a</label><select id="csAdd"><option value="">Elige un socio…</option>${mem.filter(m=>!cs[m.id]).map(m=>`<option value="${esc(m.id)}">${esc(m.nick)}</option>`).join('')}</select><button class="btn" type="button" id="csAddGo">Hacer coach</button></div>`:''}
+    <p class="status" style="margin:6px 0 0">Para que un coach pueda guardar, compártele la app desde el menú Compartir con permiso para participar.</p></section>`}
+  el.innerHTML=html;
+}
+function readCB(){const g=id=>document.getElementById(id);if(!g('cbForm'))return;
+  if(g('cbWho'))CB.who=g('cbWho').value;if(g('cbDate'))CB.date=g('cbDate').value;if(g('cbTitle'))CB.title=g('cbTitle').value;if(g('cbNote'))CB.note=g('cbNote').value;
+  if(g('cbRounds'))CB.rounds=+g('cbRounds').value||3;if(g('cbMins'))CB.mins=+g('cbMins').value||12;if(g('cbWu'))CB.wu=g('cbWu').checked;if(g('cbSrc'))CB.src=g('cbSrc').value;
+  document.querySelectorAll('[data-cbk]').forEach(s=>{CB.rows[+s.dataset.cbk].k=s.value});document.querySelectorAll('[data-cba]').forEach(s=>{CB.rows[+s.dataset.cba].amt=s.value});
+  lsSet('coachdraft',CB)}
+let cbT=null;
+$('#coachTeam').addEventListener('toggle',e=>{if(e.target.id==='cbPv')CBPV=e.target.open},true);
+$('#coachTeam').addEventListener('input',e=>{if(!e.target.closest('#cbForm'))return;CBMSG=null;readCB();if(e.target.matches('textarea,#cbTitle,#cbDate'))return;clearTimeout(cbT);cbT=setTimeout(()=>{const f=document.activeElement&&document.activeElement.dataset;const keep=f&&f.cba;renderTeam();if(keep!=null){const n=document.querySelector(`[data-cba="${keep}"]`);if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}}},700)});
+$('#coachTeam').addEventListener('change',e=>{if(!e.target.closest('#cbForm'))return;readCB();if(e.target.matches('select,input[type=checkbox],input[type=number]'))renderTeam()});
+$('#coachTeam').addEventListener('click',async e=>{
+  const t=e.target;
+  if(t.closest('#cAddGo')){const v=$('#cAdd').value;if(!v)return;TEAM.athletes=uidList(TEAM.athletes).concat(v);await saveTeam().catch(()=>{});renderTeam();return}
+  const ra=t.closest('[data-rmath]');if(ra){const u=ra.dataset.rmath;TEAM.athletes=uidList(TEAM.athletes).filter(x=>x!==u);Object.values(TEAM.groups||{}).forEach(g=>g.members=uidList(g.members).filter(x=>x!==u));await saveTeam().catch(()=>{});renderTeam();return}
+  const rg=t.closest('[data-rmgrp]');if(rg){delete TEAM.groups[rg.dataset.rmgrp];if(CB.who==='g:'+rg.dataset.rmgrp)CB.who='';await saveTeam().catch(()=>{});renderTeam();return}
+  const m=t.closest('[data-cbm]');if(m){readCB();CB.mode=m.dataset.cbm;lsSet('coachdraft',CB);renderTeam();return}
+  if(t.closest('#cbAddRow')){readCB();CB.rows.push({k:'burpee',amt:''});lsSet('coachdraft',CB);renderTeam();return}
+  const rr2=t.closest('[data-cbrm]');if(rr2){readCB();CB.rows.splice(+rr2.dataset.cbrm,1);lsSet('coachdraft',CB);renderTeam();return}
+  const rs=t.closest('[data-rmas]');if(rs){const [u,id]=rs.dataset.rmas.split('|');try{const ref=DB.doc(`assign/${u}`),s=await ref.get();if(s.exists){const b=JSON.parse(JSON.stringify(s.data()));if(b.items)delete b.items[id];await ref.set(b)}}catch(err){}return}
+  if(t.closest('#csAddGo')){const v=$('#csAdd').value;if(!v)return;const cs=Object.assign({},STAFF.coaches||{});cs[v]=nickOf(v);try{await DB.doc('wods/staff').set({coaches:cs})}catch(err){}return}
+  const rc=t.closest('[data-rmcoach]');if(rc){const cs=Object.assign({},STAFF.coaches||{});delete cs[rc.dataset.rmcoach];try{await DB.doc('wods/staff').set({coaches:cs})}catch(err){}return}
+});
+document.addEventListener('submit',async e=>{
+  if(e.target.id==='grpForm'){e.preventDefault();const st=$('#gSt'),name=$('#gName').value.trim(),mem=[...e.target.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value);
+    if(!name){st.className='status err';st.textContent='Ponle nombre al grupo.';return}if(!mem.length){st.className='status err';st.textContent='Elige al menos un atleta.';return}
+    TEAM.groups=TEAM.groups||{};TEAM.groups['g'+Date.now().toString(36)]={name,members:mem};try{await saveTeam();renderTeam()}catch(err){st.className='status err';st.textContent='No se pudo guardar.'}}
+  if(e.target.id==='cbForm'){e.preventDefault();readCB();const st=$('#cbSt'),uids=targetsOf(CB.who),wk=buildCoachWk();
+    if(!uids.length){st.className='status err';st.textContent='Elige a quién se lo mandas.';return}
+    if(!wk){st.className='status err';st.textContent=CB.mode==='src'?'Primero arma el entreno en esa pestaña.':'Agrega al menos un ejercicio.';return}
+    if(!CB.date){st.className='status err';st.textContent='Elige la fecha.';return}
+    st.className='status';st.textContent='Asignando…';
+    const gname=CB.who.startsWith('g:')?((TEAM.groups||{})[CB.who.slice(2)]||{}).name:null;
+    const ok=await assignTo(uids,wk,CB.date,CB.note.trim(),gname);
+    if(ok){CBMSG=['ok',`Listo: asignado a ${ok===1?nickOf(uids[0]):ok+' atletas'} para el ${fmtD(new Date(CB.date+'T12:00:00').getTime())}.`];CB.note='';lsSet('coachdraft',CB);renderTeam()}
+    else{st.className='status err';st.textContent='No se pudo asignar. Revisa que tengan acceso a la app.'}}
+});
+
+/* ---------- Mi coach (lo que ve el atleta) ---------- */
+function renderMiCoach(){
+  const el=$('#micBody');if(!el)return;
+  if(!DB||!UID){el.innerHTML=`<div class="empty"><strong>Entra con tu cuenta</strong>Aquí verás los entrenos que te mande tu coach.</div>`;return}
+  const items=Object.values(MYASSIGN.items||{}).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.at||0)-(b.at||0));
+  if(!items.length){el.innerHTML=`<div class="empty"><strong>Tu coach todavía no te manda entrenos</strong>Cuando te asigne uno, aparece aquí con la fecha y sus notas.</div>`;return}
+  const today=todayKey(),now=items.filter(x=>x.date===today),next=items.filter(x=>x.date>today),past=items.filter(x=>x.date<today).reverse();
+  const card=x=>{const w=x.wk||{blocks:[]},mins=w.minutes||Math.round((w.blocks||[]).reduce((a,b)=>a+(b.dur||0),0)/60);
+    const exs=[];(w.blocks||[]).forEach(b=>{if(/calentamiento|enfriamiento/i.test(b.name||''))return;b.steps.forEach(s=>{const d=ST[s.k];if(d&&s.k!=='easy'&&!exs.find(e=>e.k===s.k))exs.push({k:s.k,n:d.name,a:s.amt||d.amt})})});
+    return `<article class="hcard${x.done?' isdone':''}"><div class="hrow"><div class="hmain"><div class="hk">${esc(fmtD(new Date(x.date+'T12:00:00').getTime()))} · De ${esc(x.byNick||'tu coach')}${x.group?' · '+esc(x.group):''}</div><div class="ht">${esc(w.title||'Entreno')}</div></div><div class="htot">${mins} min</div></div>
+    ${x.note?`<p class="cnote">“${esc(x.note)}”</p>`:''}
+    <div class="hdet">${exs.slice(0,10).map(e=>`<span>${esc(e.n)} <b>${esc(e.a||'')}</b></span>`).join('')}</div>
+    <div class="hact"><button class="btn${x.done?'':' main'}" type="button" data-micgo="${esc(x.id)}">${x.done?'Repetir':'Empezar entrenamiento'}</button>${x.done?`<span class="okt">Hecho${x.done.total?' · '+fmtT(x.done.total):''}</span>`:`<button class="btn ghost" type="button" data-micdone="${esc(x.id)}">Marcar hecho</button>`}</div></article>`};
+  el.innerHTML=(now.length?`<h3 class="hday">Hoy</h3><div class="hlist">${now.map(card).join('')}</div>`:'')+
+    (next.length?`<h3 class="hday">Próximos</h3><div class="hlist">${next.map(card).join('')}</div>`:'')+
+    (!now.length&&!next.length?`<div class="empty" style="margin-bottom:12px"><strong>No tienes entrenos pendientes</strong>Abajo están los anteriores.</div>`:'')+
+    (past.length?`<h3 class="hday">Anteriores</h3><div class="hlist">${past.slice(0,20).map(card).join('')}</div>`:'');
+}
+async function markAssignDone(id,total){try{const ref=DB.doc(`assign/${UID}`),s=await ref.get();if(!s.exists)return;const b=JSON.parse(JSON.stringify(s.data()));if(!b.items||!b.items[id])return;b.items[id].done={at:Date.now(),total:total||null};await ref.set(b)}catch(e){}}
+$('#micBody').addEventListener('click',e=>{
+  const g=e.target.closest('[data-micgo]');if(g){const x=(MYASSIGN.items||{})[g.dataset.micgo];if(!x||!x.wk)return;openPlayer(JSON.parse(JSON.stringify(x.wk)),'coach',total=>markAssignDone(x.id,total));return}
+  const d=e.target.closest('[data-micdone]');if(d)markAssignDone(d.dataset.micdone,null);
+});
+
+/* ---------- Competencias HYBRIX ---------- */
+const COMPT={hyrox:'HYROX oficial',hybrix:'Competencia HYBRIX',sim:'Simulacro en el gym',otra:'Otra'};
+const daysTo=d=>Math.ceil((new Date(d+'T08:00:00')-Date.now())/864e5);
+function compProgress(){
+  if(!MYCOMP)return null;const start=MYCOMP.chosen||Date.now(),S=(SESS||[]).filter(s=>s.at>=start);
+  const weeks=Math.max(1,Math.ceil((Date.now()-start)/6048e5)),perWk=MYPLAN?MYPLAN.days:4,goal=weeks*perWk;
+  const sims=fullSims(),last=sims.length?sims[sims.length-1]:null;
+  return {n:S.length,goal,weeks,perWk,last,pct:Math.min(100,Math.round(S.length/goal*100))};
+}
+function compBanner(){
+  if(!MYCOMP)return '';const dl=daysTo(MYCOMP.date),p=compProgress(),st=MYPLAN&&MYPLAN.race===MYCOMP.date?planStatus(MYPLAN):null,sched=st?planSchedule(MYPLAN):null;
+  return `<section class="card compban"><div class="cbhead"><div><div class="eyebrow">Mi competencia</div><h2>${esc(MYCOMP.name)}</h2><p class="lede" style="margin:4px 0 0">${esc(fmtD(new Date(MYCOMP.date+'T12:00:00').getTime()))}${MYCOMP.city?' · '+esc(MYCOMP.city):''}</p></div>
+    <div class="cdown"><b>${dl>0?dl:dl===0?'¡Hoy!':'—'}</b><span>${dl>0?(dl===1?'día':'días'):dl===0?'es la competencia':'ya pasó'}</span>${dl>7?`<small>${Math.floor(dl/7)} semanas</small>`:''}</div></div>
+    <div class="cstats"><div><span>Entrenos</span><b>${p.n} <small>de ${p.goal}</small></b><i class="cbar"><i style="width:${p.pct}%"></i></i></div>
+      <div><span>${st?'Fase del plan':'Tu plan'}</span><b>${st?`${PHN[sched[st.w-1]]} <small>sem ${st.w}/${MYPLAN.weeks}</small>`:'Sin plan'}</b></div>
+      <div><span>Último simulacro</span><b>${p.last?fmtT(p.last.total):'—'}${MYPLAN?` <small>meta ${fmtT(MYPLAN.goal)}</small>`:''}</b></div></div>
+    <div class="actions" style="margin-top:4px">${!MYPLAN||MYPLAN.race!==MYCOMP.date?`<button class="btn main" type="button" id="compPlan">Armar mi plan para esta competencia</button>`:`<button class="btn" type="button" id="compPlanSee">Ver mi plan</button>`}<button class="btn ghost" type="button" id="compClear">Quitar competencia</button></div></section>`;
+}
+function renderComps(){
+  const el=$('#compBody');if(!el)return;
+  const list=(COMPS.list||[]).slice().sort((a,b)=>a.date<b.date?-1:1),today=todayKey(),up=list.filter(c=>c.date>=today),past=list.filter(c=>c.date<today).reverse();
+  const card=c=>{const dl=daysTo(c.date),mine=MYCOMP&&MYCOMP.id===c.id;return `<article class="compcard${mine?' mine':''}"><div class="ctype">${esc(COMPT[c.type]||'Competencia')}</div><h3>${esc(c.name)}</h3>
+    <p class="cmeta">${esc(fmtD(new Date(c.date+'T12:00:00').getTime()))}${c.city?' · '+esc(c.city):''}</p>${c.desc?`<p class="cdesc">${esc(c.desc)}</p>`:''}
+    <div class="cfoot"><span class="cdays">${dl>0?`Faltan <b>${dl}</b> días`:dl===0?'<b>Hoy</b>':'Ya pasó'}</span>${dl>=0?(mine?'<span class="okt">Tu competencia</span>':`<button class="btn main" type="button" data-pick="${esc(c.id)}">Elegir esta</button>`):''}${c.url?`<a class="btn ghost" href="${esc(c.url)}" target="_blank" rel="noopener">Más info</a>`:''}${COACH?`<button class="del" type="button" data-cdel="${esc(c.id)}">Borrar</button>`:''}</div></article>`};
+  let html=compBanner();
+  html+=up.length?`<div class="compgrid">${up.map(card).join('')}</div>`:`<div class="empty"><strong>Todavía no hay competencias publicadas</strong>${COACH?'Agrega la primera abajo.':'Cuando el gym publique una, aparece aquí para que la elijas.'}</div>`;
+  if(past.length)html+=`<details style="margin-top:16px"><summary class="flabel">Competencias pasadas (${past.length})</summary><div class="compgrid" style="margin-top:10px">${past.slice(0,12).map(card).join('')}</div></details>`;
+  if(COACH)html+=`<section class="card" style="margin-top:18px"><h3>Publicar competencia</h3><form id="compForm" class="cbgrid">
+    <label class="wide">Nombre<input type="text" id="cfName" placeholder="Ej. HYROX Ciudad de México" autocomplete="off"></label>
+    <label>Fecha<input type="date" id="cfDate" value="${addDays(todayKey(),60)}"></label>
+    <label>Tipo<select id="cfType">${Object.entries(COMPT).map(([k,t])=>`<option value="${k}">${t}</option>`).join('')}</select></label>
+    <label>Ciudad o lugar<input type="text" id="cfCity" placeholder="Ej. Mérida" autocomplete="off"></label>
+    <label>Link (opcional)<input type="url" id="cfUrl" placeholder="https://" autocomplete="off"></label>
+    <label class="wide">Descripción (opcional)<textarea id="cfDesc" rows="2" placeholder="Categorías, costo, cómo inscribirse…"></textarea></label>
+    <div class="actions wide" style="margin-top:0"><button class="btn main" type="submit">Publicar</button><span class="status" id="cfSt" role="status"></span></div></form></section>`;
+  el.innerHTML=html;
+}
+async function pickComp(c){
+  MYCOMP={id:c.id,name:c.name,date:c.date,city:c.city||'',chosen:Date.now()};lsSet('mycomp',MYCOMP);
+  if(DB&&UID){try{await DB.doc(`data/users/${UID}/comp`).set(MYCOMP)}catch(e){}}
+  if(MYPLAN){const wks=Math.ceil((new Date(c.date+'T12:00:00')-Date.now())/6048e5);
+    if(wks>=4){const cfg=Object.assign({},MYPLAN,{race:c.date,weeks:Math.min(24,wks),start:Date.now()-((new Date().getDay()+6)%7)*864e5,at:Date.now()});MYPLAN=cfg;lsSet('myplan',cfg);buildMyPlan(cfg);if(DB&&UID){try{await DB.doc(`data/users/${UID}/plan`).set(cfg)}catch(e){}}}}
+  renderAll();
+}
+document.addEventListener('click',async e=>{
+  const p=e.target.closest('[data-pick]');if(p){const c=(COMPS.list||[]).find(x=>x.id===p.dataset.pick);if(c)pickComp(c);return}
+  if(e.target.closest('#compPlan')){showView('plan');const r=$('#plRace');if(r&&MYCOMP){r.value=MYCOMP.date;const g=$('#plGoal');if(g)g.focus()}return}
+  if(e.target.closest('#compPlanSee')){showView('plan');window.scrollTo(0,0);return}
+  if(e.target.closest('#compClear')){MYCOMP=null;lsSet('mycomp',null);if(DB&&UID){try{await DB.doc(`data/users/${UID}/comp`).delete()}catch(err){}}renderAll();return}
+  const d=e.target.closest('[data-cdel]');if(d&&COACH){if(!d.classList.contains('confirm')){d.classList.add('confirm');d.textContent='¿Borrar? Sí';return}
+    try{await DB.doc('wods/comps').set({list:(COMPS.list||[]).filter(x=>x.id!==d.dataset.cdel)})}catch(err){}}
+});
+document.addEventListener('submit',async e=>{if(e.target.id!=='compForm')return;e.preventDefault();const st=$('#cfSt'),name=$('#cfName').value.trim(),date=$('#cfDate').value;
+  if(!name){st.className='status err';st.textContent='Ponle nombre.';return}if(!date){st.className='status err';st.textContent='Elige la fecha.';return}
+  const url=$('#cfUrl').value.trim();const c={id:'k'+Date.now().toString(36),name,date,type:$('#cfType').value,city:$('#cfCity').value.trim(),url:/^https?:\/\//.test(url)?url:'',desc:$('#cfDesc').value.trim(),at:Date.now()};
+  st.className='status';st.textContent='Publicando…';
+  try{await DB.doc('wods/comps').set({list:(COMPS.list||[]).concat(c)});st.className='status ok';st.textContent='Publicada. Tus socios ya la pueden elegir.'}
+  catch(err){st.className='status err';st.textContent='No se pudo publicar.'}});
 
 /* ---------- tiempos: el cliente escribe solo números y la app pone los dos puntos ---------- */
 function fmtDigits(v){let d=String(v||'').replace(/\D/g,'').replace(/^0+(?=\d{3})/,'').slice(0,6);
@@ -2617,7 +2865,14 @@ function makeLocalBackend(){
     DB.doc(`data/users/${UID}/rm`).get().then(s=>{if(s.exists){RM=Object.assign({},s.data());lsSet('rm',RM);renderProgs()}}).catch(()=>{});
     DB.doc(`data/users/${UID}/prog`).get().then(s=>{if(s.exists){const d=JSON.parse(JSON.stringify(s.data()));PSTATE.done=Object.assign({},d.done,PSTATE.done);lsSet('pstate',PSTATE);renderProgs()}}).catch(()=>{});
   }
-  DB.collection('board').onSnapshot(s=>{BOARD=s.docs.map(d=>({id:d.id,...d.data()}));renderBoard();renderRetos()},()=>{});
+  DB.collection('board').onSnapshot(s=>{BOARD=s.docs.map(d=>({id:d.id,...d.data()}));renderBoard();renderRetos();renderTeam()},()=>{});
+  let assignSub=null;const subAssign=()=>{if(assignSub||!isCoachUser())return;assignSub=DB.collection('assign').onSnapshot(s=>{ALLASSIGN={};s.docs.forEach(d=>{ALLASSIGN[d.id]=d.data()});renderTeam()},()=>{})};
+  DB.doc('wods/staff').onSnapshot(s=>{STAFF=s.exists&&s.data().coaches?{coaches:Object.assign({},s.data().coaches)}:{coaches:{}};$('[data-v=coach]').hidden=!isCoachUser();subAssign();renderTeam()},()=>{});
+  DB.doc('wods/comps').onSnapshot(s=>{COMPS=s.exists&&Array.isArray(s.data().list)?{list:s.data().list.map(x=>Object.assign({},x))}:{list:[]};renderComps()},()=>{});
+  subAssign();
+  if(UID){DB.doc(`teams/${UID}`).onSnapshot(s=>{if(s.exists){const d=JSON.parse(JSON.stringify(s.data()));TEAM={athletes:uidList(d.athletes),groups:d.groups||{}}}renderTeam()},()=>{});
+    DB.doc(`assign/${UID}`).onSnapshot(s=>{MYASSIGN=s.exists?JSON.parse(JSON.stringify(s.data())):{items:{}};if(!MYASSIGN.items)MYASSIGN.items={};renderMiCoach()},()=>{});
+    DB.doc(`data/users/${UID}/comp`).get().then(s=>{if(s.exists){MYCOMP=Object.assign({},s.data());lsSet('mycomp',MYCOMP);renderComps();renderPlan()}}).catch(()=>{});}
   if(UID)DB.collection(`data/users/${UID}/sessions`).orderBy('at','desc').limit(300).onSnapshot(s=>{SESS=s.docs.map(d=>({_id:d.id,...d.data()}));renderProg();if(SS&&!$('#sess').hidden&&!document.activeElement.matches('input'))renderSession()},()=>{SESS=[];renderProg()});
 })();
 

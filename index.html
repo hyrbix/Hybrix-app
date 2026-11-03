@@ -289,6 +289,7 @@ img.photo{display:block;height:auto;aspect-ratio:4/3;object-fit:cover;border-rad
 .sty-clasico i{background:linear-gradient(135deg,#13212C 50%,#6FC2B7 50%)}
 .sty-impacto i{background:linear-gradient(135deg,#050708 50%,#D4FF3A 50%)}
 .sty-claro i{background:linear-gradient(135deg,#F4F1EA 50%,#FF6A3D 50%);border:1px solid #cfd6db}
+.gtype{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;color:var(--ink);font:inherit;font-size:15px;font-weight:700}
 .hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .hstats>div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mute);line-height:1.3}
 .hstats b{display:block;font-family:var(--num);font-size:30px;color:var(--ink);line-height:1.1;margin-top:2px}
@@ -585,9 +586,10 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
     </section>
 
     <section id="v-gen" class="view" hidden>
-      <div class="vhead"><div><h2>Generar entreno</h2><p class="lede">Bloques de 10 minutos: haces todas las estaciones lo más rápido que puedas y lo que sobra es descanso. Incluye calentamiento y enfriamiento.</p></div></div>
+      <div class="vhead"><div><h2>Generar entreno</h2><p class="lede">Elige el tipo de entreno o déjalo en Automático: la app escoge el formato según las estaciones y el equipo que tengas, y cambia cada día. Incluye calentamiento y enfriamiento.</p></div></div>
       <div class="gen-grid">
         <div class="card" style="display:flex;flex-direction:column;gap:18px">
+          <div class="field"><label class="flabel" for="genType">Tipo de entreno</label><select id="genType" class="gtype"></select><p class="status" id="genWhy" style="margin:6px 0 0"></p></div>
           <div class="field"><span class="flabel">Duración</span><div class="seg-ctl" id="genMin"></div></div>
           <div class="field"><span class="flabel">Estaciones</span><div id="genSt"></div></div>
           <button class="btn" id="genShuffle" type="button">Otra variación</button>
@@ -1283,7 +1285,7 @@ function briefHTML(wk,big){
 
 /* ---------- estado de la app ---------- */
 let ASSETS=null,DB=null,USER=null,UID=null,COACH=false,HOY=null,BOARD=[],SESS=null,NAMES={};
-const gen=Object.assign({min:40,sel:['run','sled','ski','row','bike','wallball','squat'],seed:1},lsGet('gen',{}));
+const gen=Object.assign({min:40,sel:['run','sled','ski','row','bike','wallball','squat'],seed:1,type:'auto'},lsGet('gen',{}));
 let GENWK=null, SIMPART=lsGet('simpart','full');
 
 /* tabs */
@@ -1306,11 +1308,77 @@ $('#genSt').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b
   if(!gen.sel.length)gen.sel=[k];saveGen()});
 $('#genShuffle').addEventListener('click',()=>{gen.seed++;saveGen()});
 function saveGen(){lsSet('gen',gen);renderGen()}
+/* ---------- tipos de entreno en Generar (como el planificador): automático según tu equipo ---------- */
+const GTYPES=[['auto','Automático (según tu equipo)'],['hyrox','Intervalos Hyrox'],['compromised','Compromised running'],['fuerza','Fuerza-resistencia'],['motor','Motor (ergs 40/20 y 60/30)'],['sim','Simulación Hyrox']];
+const GTDESC={hyrox:'Rondas con carrera, un erg y estaciones. Haces todo lo más rápido que puedas y lo que sobra es descanso.',
+  compromised:'Carrera corta seguida de una estación, muchas veces: entrenas a correr con las piernas cansadas, como en la competencia.',
+  fuerza:'Circuito de estaciones con peso, sin carrera. Fuerza que aguanta.',
+  motor:'Bloques de trabajo y pausa en remo, SkiErg, bici o caminadora. Sube tu motor aeróbico.',
+  sim:'Carrera y estaciones en orden de competencia, a media distancia. Un solo reloj corriendo.'};
+const ERGRUN=['run','ski','row','bike'];
+const STRPOOL=['sled','pull','bbj','farmers','lunges','wallball','squat','kbswing','burpee','goblet','rdl','dblunge','stepup','bulgara','dbpress','dbrow','floorpress','thruster','devil'];
+function genPools(sel){
+  const ok=k=>ST[k]&&avail(k);let st=sel.filter(k=>ok(k)&&!ERGRUN.includes(k));
+  if(st.length<3)st=st.concat(STRPOOL.filter(k=>ok(k)&&!st.includes(k))).slice(0,Math.max(3,st.length));
+  const more=st.concat(STRPOOL.filter(k=>ok(k)&&!st.includes(k))).slice(0,Math.max(6,st.length));
+  return {run:sel.includes('run')&&ok('run'),ergs:['ski','row','bike'].filter(k=>sel.includes(k)&&ok(k)),st,more,hy:['sled','pull','bbj','farmers','lunges','wallball'].filter(ok)};
+}
+function genCandidates(sel){const p=genPools(sel),c=[];
+  if((p.run||p.ergs.length)&&p.st.length>=2)c.push('hyrox');
+  if(p.run&&p.st.length>=2)c.push('compromised');
+  if(p.st.length>=3)c.push('fuerza');
+  if(p.ergs.length||p.run)c.push('motor');
+  if((p.run||p.ergs.length)&&p.hy.length>=4)c.push('sim');
+  return c.length?c:['fuerza']}
+function genAutoType(sel,seed){const c=genCandidates(sel);const d=new Date(),day=d.getFullYear()*400+d.getMonth()*32+d.getDate();return c[(day+seed)%c.length]}
+const roundOf=(steps,name)=>{const work=steps.reduce((a,x)=>a+estSec(x.k,x.amt),0)+TR*(steps.length-1),target=r30(work*1.15);return {kind:'round',name,dur:target+60,target,steps}};
+function fillRounds(budget,make){const out=[];let used=0;for(let i=0;i<14;i++){const b=make(i);if(i>0&&used+b.dur>budget+60)break;out.push(b);used+=b.dur;if(used>=budget-90)break}return out}
+function buildCompromised(min,sel,seed){
+  const p=genPools(sel),r=rng(seed*131+min),st=shuffle(p.st.slice(),r),budget=Math.max(600,(min-10)*60);
+  const runAmt=['400 m','600 m','400 m','800 m'],amt=k=>({sled:'25 m',pull:'25 m',bbj:'20 m',farmers:'50 m',lunges:'25 m',wallball:'20 reps'})[k];
+  const rounds=fillRounds(budget,i=>{const k=st[i%st.length];return roundOf([{k:'run',amt:runAmt[i%runAmt.length]},{k,amt:amt(k)}],`Ronda ${i+1}`)});
+  rounds.forEach((b,i)=>b.name=`Ronda ${i+1}`);
+  return {id:'w'+Date.now().toString(36),title:`Compromised running ${min} min`,kind:'intervalos',minutes:min,blocks:[warm(),...rounds,cool()]};
+}
+function buildFzaRes(min,sel,seed){
+  const p=genPools(sel),r=rng(seed*173+min),st=shuffle(p.more.slice(),r),budget=Math.max(600,(min-10)*60),per=Math.min(4,st.length);
+  const MID={sled:'25 m',pull:'25 m',bbj:'20 m',farmers:'50 m',lunges:'25 m',wallball:'15 reps',kbswing:'15 reps',burpee:'10 reps'};
+  const rounds=fillRounds(budget,i=>{const steps=[];for(let j=0;j<per;j++){const k=st[(i*2+j)%st.length];steps.push(MID[k]?{k,amt:MID[k]}:{k})}return roundOf(steps,`Ronda ${i+1}`)});
+  return {id:'w'+Date.now().toString(36),title:`Fuerza-resistencia ${min} min`,kind:'intervalos',minutes:min,blocks:[warm(),...rounds,cool()]};
+}
+function buildMotor(min,sel,seed){
+  const p=genPools(sel),ergs=p.ergs.concat(p.run?['run']:[]);const r=rng(seed*197+min),list=shuffle(ergs.length?ergs:['run'],r),budget=Math.max(600,(min-10)*60);
+  const SCH=[[40,20,6,'40/20'],[60,30,5,'60/30'],[30,30,6,'30/30'],[45,15,6,'45/15']];const blocks=[];let used=0;
+  for(let i=0;i<12;i++){const [w,e,n,lab]=SCH[(i+seed)%SCH.length],k=list[i%list.length],steps=[];
+    for(let m=0;m<n;m++){steps.push({k,amt:`${w} s fuerte`,dur:w});steps.push({k:'easy',amt:`${e} s suave`,dur:e})}
+    const dur=steps.reduce((a,x)=>a+x.dur,0)+60;steps.push({k:'easy',amt:'1 min · cambia de máquina',dur:60});
+    if(i>0&&used+dur>budget+60)break;blocks.push({kind:'timed',name:`Motor ${i+1} · ${ST[k].name} ${lab}`,short:`${ST[k].name} ${lab}`,dur,steps});used+=dur;if(used>=budget-90)break}
+  return {id:'w'+Date.now().toString(36),title:`Motor ${min} min`,kind:'intervalos',minutes:min,blocks:[warm(),...blocks,cool()]};
+}
+function buildMiniSim(min,sel){
+  const p=genPools(sel),order=['ski','sled','pull','bbj','row','farmers','lunges','wallball'],half={ski:'500 m',sled:'25 m',pull:'25 m',bbj:'40 m',row:'500 m',farmers:'100 m',lunges:'50 m',wallball:'50 reps'};
+  const ok=k=>ST[k]&&avail(k),runK=p.run?'run':(p.ergs[0]||(ok('run')?'run':'row')),runAmt=runK==='run'?'500 m':runK==='bike'?'1 km':'500 m';
+  const budget=Math.max(600,(min-10)*60),steps=[];let used=0;
+  for(const k of order){if(!ok(k))continue;const a=[{k:runK,amt:runAmt},{k,amt:half[k]}],t=a.reduce((s,x)=>s+estSec(x.k,x.amt),0)+TR*2;if(steps.length&&used+t>budget)break;steps.push(...a);used+=t}
+  return {id:'s'+Date.now().toString(36),title:`Simulación Hyrox (media distancia)`,kind:'simulacro',part:'mini',blocks:[{kind:'race',name:'Simulación',steps}]};
+}
+function buildGen(){
+  const t=gen.type||'auto',real=t==='auto'?genAutoType(gen.sel,gen.seed):t;GENTYPE=real;
+  const w=real==='compromised'?buildCompromised(gen.min,gen.sel,gen.seed):real==='fuerza'?buildFzaRes(gen.min,gen.sel,gen.seed):real==='motor'?buildMotor(gen.min,gen.sel,gen.seed):real==='sim'?buildMiniSim(gen.min,gen.sel):buildIntervals(gen.min,gen.sel,gen.seed);
+  return w;
+}
+let GENTYPE='hyrox';
+
+$('#genType').innerHTML=GTYPES.map(([v,t])=>`<option value="${v}">${t}</option>`).join('');
+$('#genType').addEventListener('change',e=>{gen.type=e.target.value;saveGen()});
 function renderGen(){
   document.querySelectorAll('#genMin button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.m===gen.min));
   document.querySelectorAll('#genSt .chip').forEach(b=>{b.setAttribute('aria-pressed',gen.sel.includes(b.dataset.k)&&avail(b.dataset.k));b.setAttribute('aria-disabled',!avail(b.dataset.k))});
   $('#myEq').innerHTML=eqChipsHTML();$('#myEqReset').hidden=!EQP;$('#genPlanCtl').innerHTML=planCtl('gen');
-  GENWK=buildIntervals(gen.min,gen.sel,gen.seed);
+  $('#genType').value=gen.type||'auto';
+  GENWK=buildGen();
+  const cands=genCandidates(gen.sel),nm=t=>(GTYPES.find(x=>x[0]===t)||[0,t])[1];
+  $('#genWhy').innerHTML=(gen.type||'auto')==='auto'?`Hoy toca <b>${esc(nm(GENTYPE))}</b>. Con tu equipo se pueden: ${cands.map(nm).join(', ')}. "Otra variación" cambia de tipo.`:esc(GTDESC[GENTYPE]||'')+(!cands.includes(GENTYPE)?' <b style="color:var(--warn)">Con tu equipo actual faltan estaciones para este tipo; la app usa equivalentes.</b>':'');
   $('#genPreview').innerHTML=renderWorkout(GENWK);
   $('#genPublish').hidden=!(COACH&&DB);
 }

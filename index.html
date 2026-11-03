@@ -956,35 +956,86 @@ function placeJ(def,q){
   return j;
 }
 const PZ={skin:'#C68B67',skinB:'#9C6A4D',shirt:'#6FC2B7',shirtD:'#4E9E94',shorts:'#26323E',shortsB:'#18212A',shoe:'#F1F4F6',shoeB:'#B9C3CB',sole:'#0E151C',hair:'#1E1612',line:'#060B10'};
+/* ---------- persona más realista: cuerpo con volumen muscular, sombras, manos y cara ---------- */
+const smooth=(a,b,t)=>a+(b-a)*(t*t*(3-2*t));
+function profW(prof,t){if(t<=prof[0][0])return prof[0].slice(1);for(let i=1;i<prof.length;i++){if(t<=prof[i][0]){const a=prof[i-1],b=prof[i],u=(t-a[0])/(b[0]-a[0]);return [smooth(a[1],b[1],u),smooth(a[2],b[2],u)]}}return prof[prof.length-1].slice(1)}
+/* forma de un segmento: centro c(t), normal n(t) hacia "frente", perfil [t,anchoFrente,anchoAtrás] */
+function sweepPath(cen,nor,prof,N){N=N||14;const L=[],Rr=[];
+  for(let i=0;i<=N;i++){const t=i/N,c=cen(t),n=nor(t),[wf,wb]=profW(prof,t);L.push([c[0]+n[0]*wf,c[1]+n[1]*wf]);Rr.push([c[0]-n[0]*wb,c[1]-n[1]*wb])}
+  const c0=cen(0),c1=cen(1),n0=nor(0),n1=nor(1),[f0,b0]=profW(prof,0),[f1,b1]=profW(prof,1);
+  const d0=[c0[0]-cen(.02)[0],c0[1]-cen(.02)[1]],dl0=Math.hypot(...d0)||1,d1=[c1[0]-cen(.98)[0],c1[1]-cen(.98)[1]],dl1=Math.hypot(...d1)||1;
+  const cap=(c,n,d,dl,wf,wb,rev)=>{const r=(wf+wb)/2,mid=[c[0]+n[0]*(wf-wb)/2,c[1]+n[1]*(wf-wb)/2],u=[d[0]/dl,d[1]/dl],pts=[];
+    for(let k=1;k<6;k++){const a=k/6*Math.PI,ca=Math.cos(a),sa=Math.sin(a),s=rev?-1:1;pts.push([mid[0]+n[0]*r*ca*s+u[0]*r*sa*.8,mid[1]+n[1]*r*ca*s+u[1]*r*sa*.8])}return pts};
+  const pts=L.concat(cap(c1,n1,d1,dl1,f1,b1,false),Rr.reverse(),cap(c0,n0,d0,dl0,f0,b0,true));
+  return 'M'+pts.map(p=>r1(p[0])+' '+r1(p[1])).join('L')+'Z'}
+function segFns(A,B,front){const d=[B[0]-A[0],B[1]-A[1]],l=Math.hypot(d[0],d[1])||1;let n=[-d[1]/l,d[0]/l];if(front&&(n[0]*front[0]+n[1]*front[1])<0)n=[-n[0],-n[1]];
+  return [t=>[A[0]+d[0]*t,A[1]+d[1]*t],()=>n]}
 function drawJ(def,j,q){
-  const L=(a,b,w,c)=>`<line class="pz" x1="${r1(a[0])}" y1="${r1(a[1])}" x2="${r1(b[0])}" y2="${r1(b[1])}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
-  const C=(p,r,c)=>`<circle class="pz" cx="${r1(p[0])}" cy="${r1(p[1])}" r="${r}" fill="${c}"/>`;
-  const O=PZ.line,OW=3.2,FR=!!def.front;
-  const leg=(R,K,F,back)=>{const sk=back&&!FR?PZ.skinB:PZ.skin,so=back&&!FR?PZ.shortsB:PZ.shorts,sh=lerpP(R,K,.62);
-    let t0,t1;
-    if(FR){t0=add(F,-4,1);t1=add(F,4,1)}else{const s=[F[0]-K[0],F[1]-K[1]],n=Math.hypot(s[0],s[1])||1,fd=[s[1]/n,-s[0]/n];t0=add(F,-fd[0]*2.5,-fd[1]*2.5);t1=add(F,fd[0]*7.5,fd[1]*7.5)}
-    return L(R,K,11.5+OW,O)+L(K,F,8.5+OW,O)+L(t0,t1,6.5+OW,O)+L(K,F,8.5,sk)+L(R,K,11.5,sk)+L(R,sh,13,so)
-      +L(t0,t1,6.5,back&&!FR?PZ.shoeB:PZ.shoe)+L(add(t0,0,2.4),add(t1,0,2.4),1.6,PZ.sole)};
-  const arm=(R,E,W,back)=>{const c=back&&!FR?PZ.skinB:PZ.skin;return L(R,E,8+OW,O)+L(E,W,6.8+OW,O)+C(W,3.9+OW/2,O)+L(R,E,8,c)+L(E,W,6.8,c)+C(W,3.9,c)+L(R,lerpP(R,E,.32),9.2,back&&!FR?PZ.shirtD:PZ.shirt)};
-  let tp;
-  if(q.cb){const dx=j.N[0]-j.P[0],dy=j.N[1]-j.P[1],Ln=Math.hypot(dx,dy)||1,m=[(j.P[0]+j.N[0])/2+dy/Ln*q.cb,(j.P[1]+j.N[1])/2-dx/Ln*q.cb];tp=`M${pt(j.P)} Q${pt(m)} ${pt(j.N)}`}
-  else tp=`M${pt(j.P)} L${pt(j.N)}`;
-  const T=(w,c)=>`<path class="pz" d="${tp}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  const ux=(j.H[0]-j.N[0])/SEG.NH,uy=(j.H[1]-j.N[1])/SEG.NH,fx=FR?0:-uy,fy=FR?0:ux;
-  const neck=lerpP(j.N,j.H,.55);
-  let head=L(j.N,neck,7+OW,O)+L(j.N,neck,7,PZ.skinB)+C(j.H,SEG.R+1.7,O);
-  if(FR)head+=C(add(j.H,ux*1.6,uy*1.6),SEG.R,PZ.hair)+C(add(j.H,-ux*1.4,-uy*1.4),SEG.R-1.5,PZ.skin)+C(add(j.H,-SEG.R+1.2,0),1.8,PZ.skinB)+C(add(j.H,SEG.R-1.2,0),1.8,PZ.skinB);
-  else head+=C(add(j.H,-fx*1.2+ux*1.1,-fy*1.2+uy*1.1),SEG.R,PZ.hair)+C(add(j.H,fx*1.9-ux*.7,fy*1.9-uy*.7),SEG.R-1.6,PZ.skin)+C(add(j.H,-fx*1.2-ux*.4,-fy*1.2-uy*.4),1.9,PZ.skinB);
-  const TW=FR?22:17,waist=lerpP(j.P,j.N,.24);
-  let torso=T(TW+OW,O)+T(TW,PZ.shirt);
-  if(!FR)torso+=`<path class="pz" d="${tp}" fill="none" stroke="${PZ.shirtD}" stroke-width="5" stroke-linecap="round" opacity=".45" transform="translate(${r1(-fx*4.5)} ${r1(-fy*4.5)})"/>`;
-  if(FR)torso+=`<rect class="pz" x="${r1(j.P[0]-12.5)}" y="${r1(j.P[1]-9)}" width="25" height="15" rx="4" fill="${PZ.shorts}" stroke="${O}" stroke-width="2"/><rect class="pz" x="${r1(j.P[0]-12.5)}" y="${r1(j.P[1]-9)}" width="25" height="3" rx="1.5" fill="#3A4A58"/>`;
-  else torso+=L(j.P,waist,TW+.5,PZ.shorts)+L(lerpP(j.P,j.N,.22),lerpP(j.P,j.N,.25),TW+.5,'#3A4A58');
+  const FR=!!def.front,O=PZ.line;
+  const P=(d,fill,extra)=>`<path class="pz" d="${d}" fill="${fill}" stroke="${O}" stroke-width=".8" stroke-linejoin="round"${extra||''}/>`;
+  const MS=new Set(def&&def._p&&MUSP&&MUSP[def._p]||[]),RED=(op)=>`fill="${MRED}" opacity="${op}"`;
+  /* pinta en rojo una zona del segmento: t0..t1, lado 'f' (frente), 'b' (atrás) o 'a' (todo) */
+  const redSeg=(cenF,norF,prof,t0,t1,side,op)=>{const sub=[];for(let i=0;i<=6;i++){const u=i/6,t=t0+(t1-t0)*u,[f,b]=profW(prof,t);sub.push([u,side==='b'?-f*.05:f*.92,side==='f'?-b*.05:b*.92])}
+    return `<path class="pz mus" d="${sweepPath(u=>cenF(t0+(t1-t0)*u),u=>norF(t0+(t1-t0)*u),sub,10)}" ${RED(op)}/>`};
+  const Pn=(d,fill,op)=>`<path class="pz" d="${d}" fill="${fill}" opacity="${op}"/>`;
+  const C=(p,r,c,extra)=>`<circle class="pz" cx="${r1(p[0])}" cy="${r1(p[1])}" r="${r}" fill="${c}"${extra||''}/>`;
+  const ux=(j.H[0]-j.N[0])/SEG.NH,uy=(j.H[1]-j.N[1])/SEG.NH,fwd=FR?[1,0]:[-uy,ux];
+  const part=(A,B,prof,col,shade)=>{const [c,n]=segFns(A,B,FR?null:fwd);let s=P(sweepPath(c,n,prof),col);
+    if(shade){const hl=prof.map(([t,f,b])=>[t,f*.55,-(f*.05)]);s+=Pn(sweepPath(c,n,hl),'#FFFFFF',.13);const sh=prof.map(([t,f,b])=>[t,-(b*.25),b*.9]);s+=Pn(sweepPath(c,n,sh),'#000000',.14)}return s};
+  /* pierna: muslo con cuádriceps/isquios, pantorrilla, tobillo y tenis */
+  const leg=(R,K,F,back)=>{const sk=back&&!FR?PZ.skinB:PZ.skin,so=back&&!FR?PZ.shortsB:PZ.shorts;
+    const th=FR?[[0,7.4,7.4],[.3,7.8,7.8],[.7,6.2,6.2],[1,4.9,4.9]]:[[0,6.8,7.2],[.32,7.6,6.4],[.72,5.6,5],[1,4.4,4.4]];
+    const sh=FR?[[0,4.6,4.6],[.28,5.6,5.6],[.75,3.4,3.4],[1,2.8,2.8]]:[[0,4,4.4],[.28,3.6,6.2],[.7,2.8,3.4],[1,2.5,2.6]];
+    const op=back&&!FR?.42:.62,[kc,kn]=segFns(K,F,FR?null:fwd),[tc,tn]=segFns(R,K,FR?null:fwd);
+    let s=part(K,F,sh,sk,true);if(MS.has('calves'))s+=redSeg(kc,kn,sh,.08,.62,FR?'a':'b',op);
+    s+=part(R,K,th,sk,true);
+    if(MS.has('quads'))s+=redSeg(tc,tn,th,.44,.92,FR?'a':'f',op);if(MS.has('hams')&&!FR)s+=redSeg(tc,tn,th,.44,.92,'b',op);if(MS.has('glutes')&&!FR&&!MS.has('hams'))s+=redSeg(tc,tn,th,.44,.7,'b',op*.8);
+    s+=part(R,lerpP(R,K,.42),FR?[[0,7.6,7.6],[1,7,7]]:[[0,7,7.6],[1,7.2,6.4]],so,false);
+    let t0,t1;if(FR){t0=add(F,-4,1.5);t1=add(F,4,1.5)}else{const s2=[F[0]-K[0],F[1]-K[1]],n=Math.hypot(s2[0],s2[1])||1,fd=[s2[1]/n,-s2[0]/n];t0=add(F,-fd[0]*3,-fd[1]*3+1);t1=add(F,fd[0]*8.5,fd[1]*8.5+1)}
+    const [sc,sn]=segFns(t0,t1,null);s+=P(sweepPath(sc,sn,[[0,3.6,3.2],[.55,3.4,3.2],[1,2.6,3]]),back&&!FR?PZ.shoeB:PZ.shoe);
+    s+=`<line class="pz" x1="${r1(t0[0])}" y1="${r1(t0[1]+2.6)}" x2="${r1(t1[0])}" y2="${r1(t1[1]+2.3)}" stroke="${PZ.sole}" stroke-width="1.8" stroke-linecap="round"/>`;
+    return s};
+  /* brazo: deltoide, bíceps/tríceps, antebrazo y mano */
+  const arm=(S,E,W,back)=>{const c=back&&!FR?PZ.skinB:PZ.skin;
+    const UA=[[0,4.6,4.6],[.45,4.4,4.6],[.9,3.3,3.3],[1,3.2,3.2]],op=back&&!FR?.42:.62,[ac,an]=segFns(S,E,FR?null:fwd);
+    let s=part(E,W,[[0,3.4,3.4],[.3,3.8,3.6],[.85,2.6,2.6],[1,2.4,2.4]],c,true)+part(S,E,UA,c,true);
+    if(MS.has('biceps'))s+=redSeg(ac,an,UA,.3,.9,FR?'a':'f',op);if(MS.has('triceps'))s+=redSeg(ac,an,UA,.3,.9,FR?'a':'b',op);
+    const d=[W[0]-E[0],W[1]-E[1]],l=Math.hypot(...d)||1,hand=[W[0]+d[0]/l*2.6,W[1]+d[1]/l*2.6];
+    s+=`<ellipse class="pz" cx="${r1(hand[0])}" cy="${r1(hand[1])}" rx="3.4" ry="2.7" transform="rotate(${r1(Math.atan2(d[1],d[0])*180/Math.PI)} ${r1(hand[0])} ${r1(hand[1])})" fill="${c}" stroke="${O}" stroke-width="1"/>`;
+    s+=part(S,lerpP(S,E,.36),[[0,5.6,5.6],[1,5,5]],back&&!FR?PZ.shirtD:PZ.shirt,false);
+    if(MS.has('shoulders'))s+=redSeg(ac,an,[[0,5.6,5.6],[1,5,5]].map(([t,f,b])=>[t*.36,f,b]).concat([[1,4,4]]),0,.34,'a',op*.9);
+    return s};
+  /* tronco: cadera, cintura, pecho y espalda con la curva del cuerpo */
+  let cen,tanN;
+  if(q.cb){const dx=j.N[0]-j.P[0],dy=j.N[1]-j.P[1],Ln=Math.hypot(dx,dy)||1,m=[(j.P[0]+j.N[0])/2+dy/Ln*q.cb,(j.P[1]+j.N[1])/2-dx/Ln*q.cb];
+    cen=t=>[(1-t)*(1-t)*j.P[0]+2*(1-t)*t*m[0]+t*t*j.N[0],(1-t)*(1-t)*j.P[1]+2*(1-t)*t*m[1]+t*t*j.N[1]];
+    tanN=t=>{const tx=2*(1-t)*(m[0]-j.P[0])+2*t*(j.N[0]-m[0]),ty=2*(1-t)*(m[1]-j.P[1])+2*t*(j.N[1]-m[1]),l=Math.hypot(tx,ty)||1;let n=[-ty/l,tx/l];if(!FR&&n[0]*fwd[0]+n[1]*fwd[1]<0)n=[-n[0],-n[1]];return n}}
+  else{const [c,n]=segFns(j.P,j.N,FR?null:fwd);cen=c;tanN=n}
+  const torsoProf=FR?[[0,11.5,11.5],[.35,10,10],[.62,10.6,10.6],[.82,12.4,12.4],[1,9,9]]:[[0,7.6,9.2],[.3,7,7.6],[.55,7.6,7.6],[.78,10,8.6],[.95,7.4,7.6],[1,6,6.6]];
+  let torso=P(sweepPath(cen,tanN,torsoProf,18),PZ.shirt);
+  torso+=Pn(sweepPath(cen,tanN,torsoProf.map(([t,f,b])=>[t,f*.5,-f*.05]),18),'#FFFFFF',.14)+Pn(sweepPath(cen,tanN,torsoProf.map(([t,f,b])=>[t,-b*.3,b*.92]),18),'#000000',.16);
+  if(MS.has('core'))torso+=redSeg(cen,tanN,torsoProf,.27,.6,FR?'a':'f',.55);
+  if(MS.has('chest'))torso+=redSeg(cen,tanN,torsoProf,.64,.93,FR?'a':'f',.6);
+  if(MS.has('back')&&!FR)torso+=redSeg(cen,tanN,torsoProf,.4,.95,'b',.6);
+  const shortsProf=FR?[[0,11.6,11.6],[.22,11.2,11.2],[.26,10.8,10.8]]:[[0,7.8,9.4],[.22,7.2,8.2],[.26,7,7.8]];
+  torso+=P(sweepPath(t=>cen(t*.26),t=>tanN(t*.26),shortsProf.map(([t,f,b])=>[t/.26,f,b]),8),PZ.shorts);
+  { const a=cen(.235),n=tanN(.235),w=FR?11.2:7.6,wb=FR?11.2:8.4;torso+=`<line class="pz" x1="${r1(a[0]+n[0]*w)}" y1="${r1(a[1]+n[1]*w)}" x2="${r1(a[0]-n[0]*wb)}" y2="${r1(a[1]-n[1]*wb)}" stroke="#3A4A58" stroke-width="2.4"/>`}
+  /* cuello y cabeza con cara */
+  const neck=lerpP(j.N,j.H,.5);let head=part(j.N,neck,[[0,3.6,3.6],[1,3.2,3.2]],PZ.skinB,false);
+  const R=SEG.R;
+  if(FR){head+=`<ellipse class="pz" cx="${r1(j.H[0])}" cy="${r1(j.H[1]+.5)}" rx="${R-.6}" ry="${R+.8}" fill="${PZ.skin}" stroke="${O}" stroke-width=".8"/>`;
+    head+=`<path class="pz" d="M${r1(j.H[0]-R+.2)} ${r1(j.H[1]+1)} Q${r1(j.H[0]-R)} ${r1(j.H[1]-R-1.5)} ${r1(j.H[0])} ${r1(j.H[1]-R-.6)} Q${r1(j.H[0]+R)} ${r1(j.H[1]-R-1.5)} ${r1(j.H[0]+R-.2)} ${r1(j.H[1]+1)} Q${r1(j.H[0]+R-2)} ${r1(j.H[1]-R+3)} ${r1(j.H[0])} ${r1(j.H[1]-R+2.6)} Q${r1(j.H[0]-R+2)} ${r1(j.H[1]-R+3)} ${r1(j.H[0]-R+.2)} ${r1(j.H[1]+1)}Z" fill="${PZ.hair}"/>`;
+    head+=C(add(j.H,-R,1.5),1.9,PZ.skinB)+C(add(j.H,R,1.5),1.9,PZ.skinB)+C(add(j.H,-3,0),.9,'#1A1210')+C(add(j.H,3,0),.9,'#1A1210')+`<path class="pz" d="M${r1(j.H[0]-2.2)} ${r1(j.H[1]+4.6)} Q${r1(j.H[0])} ${r1(j.H[1]+5.6)} ${r1(j.H[0]+2.2)} ${r1(j.H[1]+4.6)}" fill="none" stroke="#7A4A35" stroke-width=".9" stroke-linecap="round"/>`}
+  else{const f=fwd,u=[ux,uy],at=(a,b)=>[j.H[0]+f[0]*a+u[0]*b,j.H[1]+f[1]*a+u[1]*b],p=(a,b)=>pt(at(a,b));
+    head+=`<path class="pz" stroke-width=".8" d="M${p(-R+.8,1)} Q${p(-R,R*.9)} ${p(0,R+.6)} Q${p(R*.8,R*.9)} ${p(R-.4,2)} L${p(R+1.6,-.6)} L${p(R-.2,-1.8)} Q${p(R,-4.4)} ${p(R-1.6,-5.6)} Q${p(R*.4,-R-1.2)} ${p(-1.5,-R-.4)} Q${p(-R+1,-R+2)} ${p(-R+.8,1)}Z" fill="${PZ.skin}" stroke="${O}" stroke-width=".8" stroke-linejoin="round"/>`;
+    head+=`<path class="pz" d="M${p(-R+.4,2)} Q${p(-R-.6,R*.7)} ${p(-1,R+.9)} Q${p(R*.45,R+1.2)} ${p(R*.62,R*.55)} Q${p(R*.1,R*.62)} ${p(-1.6,R*.25)} Q${p(-2.4,2.2)} ${p(-R+.4,2)}Z" fill="${PZ.hair}"/>`;
+    head+=`<ellipse class="pz" cx="${r1(at(-1.6,.2)[0])}" cy="${r1(at(-1.6,.2)[1])}" rx="1.9" ry="2.4" fill="${PZ.skinB}" stroke="${O}" stroke-width=".7"/>`+C(at(R*.52,1.6),.95,'#1A1210')+`<path class="pz" d="M${p(R*.25,2.9)} L${p(R*.75,2.6)}" stroke="${PZ.hair}" stroke-width="1" stroke-linecap="round"/>`}
   const legs=leg(j.HP2,j.K2,j.F2,1)+(FR?leg(j.HP1,j.K1,j.F1,0):'');
   const body=FR?legs+torso+head+arm(j.S2,j.E2,j.W2,1)+arm(j.S1,j.E1,j.W1,0)
     :legs+arm(j.S2,j.E2,j.W2,1)+torso+leg(j.HP1,j.K1,j.F1,0)+head+arm(j.S1,j.E1,j.W1,0);
-  return (def.sc||'')+(def.prb?def.prb(j,q):'')+body+musOverlay(def,j,FR,fx,fy)+(def.pr?def.pr(j,q):'');
+  return (def.sc||'')+(def.prb?def.prb(j,q):'')+body+(def.pr?def.pr(j,q):'');
 }
+
 Object.keys(ANIM).forEach(k=>{ANIM[k]._p=k});
 function renderAnim(def,u){
   const q=poseAt(def,u),j=placeJ(def,q);let c=drawJ(def,j,q);
@@ -2240,10 +2291,10 @@ function make3D(host,pic){
     cap(b.PL,b.PR,7.2,C.shorts,o);cap(b.S2,b.S1,5.4,C.shirt,o);
     const nk=vlerp(b.N,b.H,.55);cap(b.N,nk,3.1,C.skin,o);
     const mixC=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t)),MM=new Set(MUSP[pic]||[]),RD=mixC(C.skin,hexRgb(MRED),.62),RDb=mixC(C.skinB,hexRgb('#B02A2D'),.62),thR=MM.has('quads')||MM.has('hams')||MM.has('glutes'),shR=MM.has('calves'),arR=MM.has('biceps')||MM.has('triceps')||MM.has('shoulders');
-    [[b.HP1,b.K1,b.F1,C.skin,j.K1,j.F1,RD],[b.HP2,b.K2,b.F2,C.skinB,j.K2,j.F2,RDb]].forEach(([hp,k,f,col,K2,F2,rc])=>{cap(hp,k,5.3,thR?rc:col,o);cap(hp,vlerp(hp,k,thR?.3:.6),6,C.shorts,o);cap(k,f,4,shR?rc:col,o);
+    [[b.HP1,b.K1,b.F1,C.skin,j.K1,j.F1,RD],[b.HP2,b.K2,b.F2,C.skinB,j.K2,j.F2,RDb]].forEach(([hp,k,f,col,K2,F2,rc])=>{cap(hp,k,5.3,thR?rc:col,o);ball(vlerp(hp,k,.4),6.1,thR?rc:col,o);cap(hp,vlerp(hp,k,thR?.3:.45),6.4,C.shorts,o);cap(k,f,3.7,shR?rc:col,o);ball(vlerp(k,f,.3),4.5,shR?rc:col,o);
       let fd;if(FR)fd=[1,0,0];else{const sx=F2[0]-K2[0],sy=F2[1]-K2[1],nn=Math.hypot(sx,sy)||1;fd=[sy/nn,sx/nn,0]}
       cap(vadd(f,vsc(fd,-2)),vadd(f,vsc(fd,8)),2.9,C.shoe,Object.assign({bias:-1},o))});
-    [[b.S1,b.E1,b.W1,C.skin,RD],[b.S2,b.E2,b.W2,C.skinB,RDb]].forEach(([s,e,w,col,rc])=>{cap(s,e,3.5,arR?rc:col,o);cap(s,vlerp(s,e,.35),4.1,MM.has('shoulders')?rc:C.shirt,o);cap(e,w,3,col,o);ball(w,3.4,col,o)});
+    [[b.S1,b.E1,b.W1,C.skin,RD],[b.S2,b.E2,b.W2,C.skinB,RDb]].forEach(([s,e,w,col,rc])=>{cap(s,e,3.5,arR?rc:col,o);ball(vlerp(s,e,.5),4,arR?rc:col,o);cap(s,vlerp(s,e,.35),4.1,MM.has('shoulders')?rc:C.shirt,o);ball(s,4.6,MM.has('shoulders')?rc:C.shirt,o);cap(e,w,3,col,o);ball(w,3.4,col,o)});
     const up=vsub(b.H,b.N),ul=Math.hypot(...up)||1,u=vsc(up,1/ul);let fw=FR?[1,0,0]:[u[1],-u[0],0];if(!FR&&fw[0]<0)fw=vsc(fw,-1);
     prims.push({t:'sph',c:b.H,r:7.9,col:C.skin,o});
     prims.push({t:'sph',c:vadd(vadd(b.H,vsc(fw,-2.2)),vsc(u,1.5)),r:7.6,col:C.hair,o,bias:.6});

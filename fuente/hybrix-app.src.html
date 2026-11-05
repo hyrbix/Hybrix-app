@@ -307,6 +307,7 @@ img.photo{display:block;height:auto;aspect-ratio:4/3;object-fit:cover;border-rad
 .gtypes button.on{background:#8EC5E3;border-color:#0B1218;font-weight:500;box-shadow:0 0 0 1px #0B1218 inset}
 .gtypes button.today:not(.on){border-color:#5FA8D0;border-style:dashed}
 .gtype{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;color:var(--ink);font:inherit;font-size:15px;font-weight:700}
+.cycbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 10px;font-size:13px;color:var(--mute);font-weight:700}
 .hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .hstats>div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mute);line-height:1.3}
 .hstats b{display:block;font-family:var(--num);font-size:30px;color:var(--ink);line-height:1.1;margin-top:2px}
@@ -1670,64 +1671,100 @@ const FIN=[['Finisher remo + wall balls','3 rondas de 500 m de remo y 20 wall ba
 const fin=w=>{const f=pick(FIN,w);return wodI(f[0],f[1],f[2]())};
 const CORE=[['plank','45 s'],['hollow','30 s'],['russian','20 reps'],['plank','60 s'],['hollow','40 s']];
 const ERGS=['ski','row','bike'];
+/* ---------- motor de variedad: rota ejercicios por patrón de movimiento, semana y ciclo ---------- */
+const PAT={
+  sqBar:['squat','frontsquat'],
+  hiBar:['deadlift','sumodl'],
+  squat:['goblet','kbgob','frontsquat','squat'],
+  hinge:['rdl','kbdl','hipthrust','slrdl','sumodl','deadlift'],
+  hingeAcc:['rdl','kbdl','hipthrust','slrdl','kbswing'],
+  single:['bulgara','dblunge','kblunge','stepup','slrdl','lunges'],
+  vpush:['pushpress','dbpress','kbpress'],
+  hpush:['bench','floorpress','pushup'],
+  pull:['pullup','chinup','dbrow','kbrow'],
+  power:['kbswing','kbclean','kbsnatch','devil','thruster','boxjump','wallball','burpee'],
+  carry:['farmers','sled','pull','lunges'],
+  arms:['curl','triext','latraise'],
+  core:['plank','hollow','russian'],
+  dbSquat:['goblet','kbgob'],dbHinge:['rdl','kbdl','slrdl'],dbV:['dbpress','kbpress'],dbH:['floorpress','pushup'],dbPull:['dbrow','kbrow','pullup','chinup'],
+  dbPower:['kbswing','kbclean','kbsnatch','devil','thruster'],ergs:['ski','row','bike']
+};
+const hashS=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))%1000003;return h};
+function progCycle(id){if(id==='mine')return 0;const pr=PROGS[id];if(GYMPROG&&GYMPROG.progId===id&&GYMPROG.start)return Math.floor((Date.now()-GYMPROG.start)/6048e5/pr.weeks);return (PSTATE.cyc&&PSTATE.cyc[id])||0}
+const dkey=(id,w,d)=>{const c=progCycle(id);return (c?c+'.':'')+w+'-'+d};
+/* elige del patrón: otra opción cada semana, sin repetir en el mismo día */
+function rp(id,pat,w,slot,used){const base=(PAT[pat]||[pat]).filter(k=>ST[k]&&avail(k));if(!base.length)return null;
+  const seq=shuffle(base.slice(),rng(hashS(id+pat)+progCycle(id)*977+1));let i=(w-1)*(slot%2?1:1)+slot*Math.max(1,Math.floor(seq.length/2));
+  for(let t=0;t<seq.length;t++){const k=seq[(i+t)%seq.length];if(!used||!used.has(k)){if(used)used.add(k);return k}}return seq[i%seq.length]}
+const repsOf=(k,r)=>/bulgara|slrdl|dblunge|kblunge|stepup/.test(k)?`${Math.max(6,Math.round(+r*.7||8))} por pierna`:/kbpress|kbclean|kbsnatch|kbrow|dbrow/.test(k)?`${Math.max(6,Math.round(+r*.8||8))} por brazo`:/pullup|chinup/.test(k)?'máx':/plank|hollow/.test(k)?'40 s':k==='lunges'?'20 m':k==='farmers'?'50 m':/sled|pull/.test(k)?'25 m':String(r);
+const accL=(k,sets,r,rest)=>k?lift(k,sets,repsOf(k,r),rest):null;
+/* cardio: 5 formatos que rotan */
+function motorGen(id,w,lvl,dl){
+  const fmts=shuffle(['int','runerg','pyr','erg','fart'],rng(hashS(id+'m')+progCycle(id)*131)),f=fmts[(w-1)%fmts.length],pro=lvl==='pro',erg=rp(id,'ergs',w,1)||'row';
+  const n=x=>dl?Math.max(2,Math.round(x*.6)):x,i=(w-1)%8;
+  if(f==='int'){const t=pro?[[5,'1 km',330],[6,'1 km',330],[4,'1.5 km',480],[5,'1.5 km',480],[4,'2 km',630],[6,'1 km',320],[5,'2 km',630],[8,'800 m',270]][i]:[[6,'400 m',180],[8,'400 m',180],[5,'800 m',300],[6,'600 m',240],[6,'800 m',300],[4,'1 km',360],[5,'1 km',360],[10,'400 m',180]][i];
+    return wodI(`Intervalos ${n(t[0])} × ${t[1]}`,`${n(t[0])} × ${t[1]} a ritmo fuerte. Lo que sobre del bloque es descanso.`,[warm(),...runInts(n(t[0]),t[1],t[2]),cool()])}
+  if(f==='runerg'){const t=pro?[5,'1 km','500 m',480]:[5,'600 m','250 m',330];return wodI(`Carrera + ${ST[erg].name}`,`${n(t[0])} rondas de ${t[1]} de carrera y ${t[2]} de ${ST[erg].name}.`,[warm(),...circuit(n(t[0]),[['run',t[1]],[erg,t[2]]],t[3]),cool()])}
+  if(f==='pyr'){const L=pro?[400,800,1200,1600,1200,800,400]:[200,400,600,800,600,400,200],ds=dl?L.filter((x,j)=>j%2===0):L;
+    return wodI('Pirámide de carrera',`${ds.map(x=>x>=1000?x/1000+' km':x+' m').join(' · ')}. Rápido y controlado; lo que sobre es descanso.`,[warm(),...ds.map((m,j)=>{const a=m>=1000?m/1000+' km':m+' m',cap=r30(estSec('run',a)*1.25+60);return {kind:'round',name:`Tramo ${j+1}`,dur:cap,target:cap-45,steps:[{k:'run',amt:a}]}}),cool()])}
+  if(f==='erg'){const es=PAT.ergs.filter(k=>avail(k)),bl=(es.length?es:['run']).map(k=>ivBlock(`${ST[k].name} 40/20`,ST[k].name,[{k,amt:'40 s fuerte',dur:40},{k:'easy',amt:'20 s suave',dur:20}],n(pro?8:6)));
+    return wodI(`Motor en máquinas 40/20`,`${bl.length} bloques de ${n(pro?8:6)} min: 40 s fuerte, 20 s suave en cada máquina.`,[warm(),...bl,cool()])}
+  const reps=n(pro?8:6),fast=pro?120:90,slow=60;return wodI('Fartlek de carrera',`${reps} veces ${fast/60} min rápido y 1 min suave, sin parar.`,[warm(),ivBlock('Fartlek','Fartlek',[{k:'run',amt:`${fast/60} min rápido`,dur:fast},{k:'run',amt:'1 min suave',dur:slow}],reps),cool()])}
+/* finisher: combina una máquina y un ejercicio de potencia, formato distinto cada semana */
+function finGen(id,w,used){const erg=rp(id,'ergs',w,2)||'row',p=rp(id,'power',w,3,used)||'burpee',f=['rondas','emom','4020'][(w+progCycle(id))%3];
+  const PA={kbswing:'15 reps',kbclean:'8 por brazo',kbsnatch:'8 por brazo',devil:'8 reps',thruster:'12 reps',boxjump:'12 reps',wallball:'20 reps',burpee:'12 reps'};
+  if(f==='rondas')return wodI(`Finisher ${ST[erg].name} + ${ST[p].name}`,`3 rondas de 500 m de ${ST[erg].name} y ${PA[p]} de ${ST[p].name} (bloques de 4 min).`,circuit(3,[[erg,'500 m'],[p,PA[p]]],240));
+  if(f==='emom'){const steps=[];for(let m=0;m<8;m++)steps.push(m%2?{k:p,amt:PA[p],dur:60}:{k:erg,amt:'15 cal',dur:60});return wodI(`Finisher EMOM 8 · ${ST[erg].name} / ${ST[p].name}`,`Cada minuto alternas 15 calorías de ${ST[erg].name} y ${PA[p]} de ${ST[p].name}.`,[{kind:'timed',name:'EMOM 8',short:'EMOM 8',dur:480,steps}])}
+  return wodI(`Finisher 40/20 · ${ST[p].name} + ${ST[erg].name}`,`4 vueltas: 40 s de ${ST[p].name}, 20 s pausa, 40 s de ${ST[erg].name}, 20 s pausa.`,[ivBlock('40/20','40/20',[{k:p,amt:'40 s',dur:40},{k:'easy',amt:'20 s',dur:20},{k:erg,amt:'40 s',dur:40},{k:'easy',amt:'20 s',dur:20}],4)])}
+const coreL=(id,w,slot)=>{const k=rp(id,'core',w,slot)||'plank';return lift(k,3,k==='russian'?'20 reps':k==='plank'?'45 s':'30 s',45)};
+const COMPOFF=id=>progCycle(id)*5;
 const PROGS={
-  base8:{name:'Base Hyrox',weeks:8,days:3,level:'Principiante a intermedio',desc:'Tres días por semana: fuerza, motor y estaciones. Los ejercicios cambian cada semana. Semana 4 de descarga y semana 8 con prueba de medio simulacro.',
+  base8:{name:'Base Hyrox',weeks:8,days:3,level:'Principiante a intermedio',desc:'Tres días por semana: fuerza completa, motor con tren superior y estaciones. Ningún entreno se repite: los ejercicios, el cardio y los finishers cambian cada semana y en cada ciclo nuevo. Semana 4 de descarga y semana 8 con prueba.',
     build:w=>{
-      const i=w-1,acc=(w===4||w===8)?2:3;
-      const sq={p:[65,70,72.5,60,72.5,75,80,60],r:[8,8,6,5,6,5,4,5],s:[4,4,5,3,4,5,5,3]},dl={p:[65,70,75,60,75,77.5,80,60],r:[6,6,5,5,5,4,3,5],s:[4,4,4,3,4,4,5,3]};
-      const sqk=pick(['squat','frontsquat'],w),hk=pick(['deadlift','sumodl','deadlift','hipthrust'],w);
-      const push=pick(['dbpress','pushpress','floorpress','pushup'],w),uni=pick(['dblunge','stepup','bulgara','slrdl'],w),core=pick(CORE,w);
-      const runs=[[6,'400 m',180],[8,'400 m',180],[5,'800 m',300],[4,'400 m',180],[6,'800 m',300],[4,'1 km',360],[5,'1 km',360],[3,'1 km',360]][i];
-      const acc2=pick([['dbrow','pushup'],['pullup','burpee'],['kbswing','hollow'],['chinup','russian']],w);
-      const carry=pick([['farmers','50 m'],['lunges','20 m'],['sled','25 m'],['pull','25 m']],w);
+      const id='base8',i=w-1,dl=w===4,acc=dl?2:3,u1=new Set(),u2=new Set(),u3=new Set();
+      const sq={p:[65,70,72.5,60,72.5,75,80,60],r:[8,8,6,5,6,5,4,5],s:[4,4,5,3,4,5,5,3]},dlx={p:[65,70,75,60,75,77.5,80,60],r:[6,6,5,5,5,4,3,5],s:[4,4,4,3,4,4,5,3]};
+      const ar=[12,10,10,10,8,8,8,10][i];
+      const sqk=rp(id,'sqBar',w,0,u1)||'goblet',hk=rp(id,'hiBar',w,0,u3)||'kbdl';
+      const d1=[lift(sqk,sq.s[i],sq.r[i],150,PAT.sqBar.includes(sqk)?{rm:'squat',pct:sq.p[i],mul:sqk==='frontsquat'?.8:1}:{}),
+        accL(rp(id,'single',w,0,u1),acc,ar,90),accL(rp(id,w%2?'vpush':'hpush',w,0,u1),acc,ar,90),accL(rp(id,'power',w,0,u1),acc,ar,75),coreL(id,w,0),finGen(id,w,u1)];
+      const d2=[motorGen(id,w,'base',dl),accL(rp(id,'pull',w,0,u2),acc,ar,90),accL(rp(id,w%2?'hpush':'vpush',w,1,u2),acc,ar,75),accL(rp(id,'arms',w,0,u2),acc,12,60),accL(rp(id,'arms',w,1,u2),acc,12,60),coreL(id,w,1)];
       const comp=[3,3,4,2,4,4,5,0][i];
-      const motor=w%2?wodI('Intervalos de carrera',`${runs[0]} × ${runs[1]} a ritmo fuerte. Lo que sobre del bloque es descanso.`,[warm(),...runInts(runs[0],runs[1],runs[2]),cool()])
-        :wodI('Carrera + erg',`${runs[0]} rondas de ${runs[1]} de carrera y 250 m de ${ST[pick(ERGS,w/2)].name} (bloques de ${Math.round((runs[2]+90)/60)} min).`,[warm(),...circuit(runs[0],[['run',runs[1]],[pick(ERGS,w/2),'250 m']],runs[2]+90),cool()]);
-      return [
-        {name:'Fuerza: pierna y empuje',items:[lift(sqk,sq.s[i],sq.r[i],150,{rm:'squat',pct:sq.p[i],mul:sqk==='frontsquat'?.8:1}),lift(push,acc,push==='pushpress'?8:10,90),lift(uni,acc,uni==='bulgara'||uni==='slrdl'?'8 por pierna':12,90),lift(core[0],3,core[1],45),fin(w)]},
-        {name:'Motor y tren superior',items:[motor,lift(acc2[0],3,/pullup|chinup/.test(acc2[0])?'máx':12,75),lift(acc2[1],3,acc2[1]==='hollow'?'30 s':12,60)]},
-        {name:'Estaciones y carrera comprometida',items:w===8?[wodI('Prueba: medio simulacro','4 km de carrera con las estaciones 1 a 4. Anota tu tiempo.',buildSim('a').blocks)]
-          :[lift(hk,dl.s[i],hk==='hipthrust'?10:dl.r[i],150,hk==='hipthrust'?{}:{rm:'deadlift',pct:dl.p[i]}),lift(carry[0],3,carry[1],90),
-            wodI('Carrera comprometida',`${comp} rondas de 1 km de carrera más una estación, cada una en bloque de 8 min.`,compromised(comp,w*3,480))]}
-      ];}},
-  pro8:{name:'Pro Performance',weeks:8,days:4,level:'Avanzado · Pro',desc:'Cuatro días: fuerza máxima, motor, fuerza-resistencia y simulación. Ejercicios y formatos distintos cada semana.',
+      const d3=w===8?[wodI('Prueba: medio simulacro','4 km de carrera con las estaciones 1 a 4. Anota tu tiempo y compáralo con el de la semana 1.',buildSim(progCycle(id)%2?'b':'a').blocks)]
+        :[lift(hk,dlx.s[i],dlx.r[i],150,PAT.hiBar.includes(hk)?{rm:'deadlift',pct:dlx.p[i]}:{}),accL(rp(id,'hingeAcc',w,1,u3),acc,ar,90),accL(rp(id,'carry',w,0,u3),3,0,90),
+          wodI('Carrera comprometida',`${comp} rondas de 1 km de carrera más una estación, cada una en bloque de 8 min.`,compromised(comp,w*3+COMPOFF(id),480))];
+      return [{name:'Fuerza: pierna, empuje y potencia',items:d1.filter(Boolean)},{name:'Motor y tren superior',items:d2.filter(Boolean)},{name:'Estaciones y carrera comprometida',items:d3.filter(Boolean)}];}},
+  pro8:{name:'Pro Performance',weeks:8,days:4,level:'Avanzado · Pro',desc:'Cuatro días: fuerza máxima, motor, fuerza-resistencia y simulación. Cada semana cambian los ejercicios, el formato de cardio y los finishers; en cada ciclo nuevo salen combinaciones distintas.',
     build:w=>{
-      const i=w-1,dl=w===4||w===8;
+      const id='pro8',i=w-1,dl=w===4||w===8,u1=new Set(),u3=new Set();
       const sq={p:[75,77.5,80,65,80,82.5,85,70],r:[5,5,4,5,4,3,3,3]},bp={p:[72.5,75,77.5,62.5,77.5,80,82.5,70],r:[6,5,5,5,4,4,3,3]};
-      const sqk=pick(['squat','frontsquat','squat','frontsquat'],w),pr=pick(['bench','pushpress','bench','floorpress'],w),pl=pick(['pullup','dbrow','chinup','dbrow'],w),core=pick(CORE,w+1);
-      const thr=[[5,'1 km',330],[6,'1 km',330],[4,'1.5 km',480],[3,'1 km',330],[5,'1.5 km',480],[4,'2 km',630],[5,'2 km',630],[3,'1 km',330]][i];
-      const erg=pick(ERGS,w);
-      const motor=w%2?wodI('Intervalos de umbral',`${thr[0]} × ${thr[1]} a ritmo de carrera Hyrox o un poco más rápido.`,[warm(),...runInts(thr[0],thr[1],thr[2]),cool()])
-        :wodI(`Carrera + ${ST[erg].name}`,`${thr[0]} rondas de ${thr[1]} de carrera y 500 m de ${ST[erg].name} (bloques de ${Math.round((thr[2]+150)/60)} min).`,[warm(),...circuit(thr[0],[['run',thr[1]],[erg,'500 m']],thr[2]+150),cool()]);
-      const sl=pick([['sled','25 m'],['pull','25 m']],w),lg=pick([['lunges','20 m'],['stepup','12 reps'],['bulgara','8 por pierna']],w),wb=pick([['wallball','25'],['thruster','12'],['kbswing','20']],w),hg=pick(['deadlift','sumodl','hipthrust','deadlift'],w);
-      const sim=[()=>compromised(5,0,420),()=>buildSim('a').blocks,()=>compromised(6,2,420),()=>compromised(3,4,420),()=>buildSim('b').blocks,()=>compromised(6,5,420),()=>buildSim('a').blocks,()=>buildSim('full').blocks][i]();
-      const simName=['Carrera comprometida ×5','Medio simulacro 1–4','Carrera comprometida ×6','Carrera comprometida ×3','Medio simulacro 5–8','Carrera comprometida ×6','Medio simulacro 1–4','Simulacro completo'][i];
-      return [
-        {name:'Fuerza máxima',items:[lift(sqk,dl?3:5,sq.r[i],180,{rm:'squat',pct:sq.p[i],mul:sqk==='frontsquat'?.8:1}),lift(pr,dl?3:5,pr==='bench'?bp.r[i]:6,150,pr==='bench'?{rm:'bench',pct:bp.p[i]}:{}),lift(pl,dl?3:4,/pullup|chinup/.test(pl)?(w<5?6:8):10,120),lift(core[0],3,core[1],45)]},
-        {name:'Motor',items:[motor]},
-        {name:'Fuerza-resistencia',items:[lift(sl[0],dl?3:5,sl[1],120,{note:'Más pesado que en carrera. Pasos cortos y potentes.'}),lift(hg,dl?3:4,hg==='hipthrust'?10:5,150,hg==='hipthrust'?{}:{rm:'deadlift',pct:dl?60:75}),lift(lg[0],dl?2:4,lg[1],90),lift(wb[0],dl?2:4,wb[1],60),fin(w+2)]},
-        {name:'Simulación',items:[wodI(simName,'Hazlo a ritmo de competencia. Toma split en cada estación.',sim)]}
-      ];}},
-  db6:{name:'Fuerza con mancuernas',weeks:6,days:3,level:'Todos los niveles',desc:'Seis semanas solo con mancuernas y kettlebell. Cada semana cambian los ejercicios: pierna, tren superior y completo con metcon.',
+      const sqk=rp(id,'sqBar',w,0,u1)||'goblet',pr=rp(id,'hpush',w,0,u1)||'pushup',hg=rp(id,'hiBar',w,0,u3)||'kbdl';
+      const ar=[8,8,6,8,6,6,5,8][i];
+      const d1=[lift(sqk,dl?3:5,sq.r[i],180,PAT.sqBar.includes(sqk)?{rm:'squat',pct:sq.p[i],mul:sqk==='frontsquat'?.8:1}:{}),
+        lift(pr,dl?3:5,pr==='bench'?bp.r[i]:8,150,pr==='bench'?{rm:'bench',pct:bp.p[i]}:{}),accL(rp(id,'pull',w,0,u1),dl?3:4,ar,120),
+        accL(rp(id,'vpush',w,0,u1),dl?2:3,ar,90),accL(rp(id,'single',w,0,u1),dl?2:3,ar,90),coreL(id,w,0)];
+      const sl=rp(id,'carry',w,0,u3)||'sled';
+      const d3=[lift(sl,dl?3:5,repsOf(sl,0),120,{note:'Más pesado que en carrera. Pasos cortos y potentes.'}),
+        lift(hg,dl?3:4,5,150,PAT.hiBar.includes(hg)?{rm:'deadlift',pct:dl?60:75}:{}),accL(rp(id,'single',w,1,u3),dl?2:4,ar+2,90),
+        accL(rp(id,'power',w,0,u3),dl?2:4,ar+4,60),accL(rp(id,'hingeAcc',w,2,u3),dl?2:3,10,75),finGen(id,w+1,u3)];
+      const simList=[[()=>compromised(5,COMPOFF(id),420),'Carrera comprometida ×5'],[()=>buildSim('a').blocks,'Medio simulacro 1–4'],[()=>compromised(6,2+COMPOFF(id),420),'Carrera comprometida ×6'],[()=>compromised(3,4+COMPOFF(id),420),'Carrera comprometida ×3'],[()=>buildSim('b').blocks,'Medio simulacro 5–8'],[()=>compromised(6,5+COMPOFF(id),420),'Carrera comprometida ×6'],[()=>buildSim(progCycle(id)%2?'b':'a').blocks,'Medio simulacro'],[()=>buildSim('full').blocks,'Simulacro completo']][i];
+      return [{name:'Fuerza máxima',items:d1.filter(Boolean)},{name:'Motor',items:[motorGen(id,w,'pro',dl)]},{name:'Fuerza-resistencia',items:d3.filter(Boolean)},{name:'Simulación',items:[wodI(simList[1],'Hazlo a ritmo de competencia. Toma split en cada estación.',simList[0]())]}];}},
+  db6:{name:'Fuerza con mancuernas',weeks:6,days:3,level:'Todos los niveles',desc:'Seis semanas solo con mancuernas y kettlebell: pierna, tren superior y completo con metcon. Cada semana y cada ciclo cambian los ejercicios y el metcon.',
     build:w=>{
-      const [S,Rp]=[[3,12],[3,12],[4,10],[2,10],[4,8],[4,8]][w-1],k=(w-1)%3;
-      const legA=['goblet','bulgara','dblunge'][k],legB=['rdl','slrdl','hipthrust'][k],legC=['stepup','goblet','bulgara'][k];
-      const upA=['dbpress','floorpress','pushpress'][k],upB=['dbrow','pullup','chinup'][k],upC=['pushup','burpee','pushup'][k],upD=['floorpress','dbpress','dbrow'][k];
-      const fullA=['thruster','devil','kbswing'][k],fullB=['dblunge','stepup','goblet'][k];
-      const met=[['Metcon devil press','4 rondas de 6 devil press, 12 goblet y 400 m de carrera (bloques de 4 min).',[['devil','6 reps'],['goblet','12 reps'],['run','400 m']]],
-        ['Metcon swings','4 rondas de 15 swings, 10 burpees y 400 m de carrera (bloques de 4 min).',[['kbswing','15 reps'],['burpee','10 reps'],['run','400 m']]],
-        ['Metcon thrusters','4 rondas de 10 thrusters, 10 saltos al cajón y 250 m de remo (bloques de 4 min).',[['thruster','10 reps'],['boxjump','10 reps'],['row','250 m']]]][k];
-      const per=x=>x==='bulgara'||x==='slrdl'?Math.max(6,Rp-4)+' por pierna':Rp;
-      return [
-        {name:'Pierna',items:[lift(legA,S,per(legA),90),lift(legB,S,per(legB),90),lift(legC,Math.max(2,S-1),per(legC),75),lift(pick(CORE,w)[0],3,pick(CORE,w)[1],45)]},
-        {name:'Tren superior',items:[lift(upA,S,Rp,90),lift(upB,S,/pullup|chinup/.test(upB)?'máx':Rp,90),lift(upD,S-1||2,Rp,75),lift(upC,3,upC==='burpee'?10:'máx',60)]},
-        {name:'Completo y metcon',items:[lift(fullA,S,fullA==='devil'?6:Math.max(8,Rp-2),90),lift(fullB,S,per(fullB),75),wodI(met[0],met[1],circuit(4,met[2],240))]}
-      ];}}
+      const id='db6',[S,Rp]=[[3,12],[3,12],[4,10],[2,10],[4,8],[4,8]][w-1],u1=new Set(),u2=new Set(),u3=new Set();
+      const d1=[accL(rp(id,'dbSquat',w,0,u1),S,Rp,90),accL(rp(id,'dbHinge',w,0,u1),S,Rp,90),accL(rp(id,'single',w,0,u1),Math.max(2,S-1),Rp,75),accL(rp(id,'dbPower',w,0,u1),3,Rp,60),coreL(id,w,0)];
+      const d2=[accL(rp(id,'dbV',w,0,u2),S,Rp,90),accL(rp(id,'dbPull',w,0,u2),S,Rp,90),accL(rp(id,'dbH',w,0,u2),Math.max(2,S-1),Rp,75),accL(rp(id,'arms',w,0,u2),3,12,60),accL(rp(id,'arms',w,1,u2),3,12,60),coreL(id,w,1)];
+      const p1=rp(id,'dbPower',w,1,u3)||'kbswing',s1=rp(id,'single',w,1,u3)||'dblunge',p2=rp(id,'dbPower',w,2,u3)||'burpee',e=rp(id,'ergs',w,0)||'row';
+      const fmt=(w+progCycle(id))%3,PA={kbswing:'15 reps',kbclean:'8 por brazo',kbsnatch:'8 por brazo',devil:'6 reps',thruster:'10 reps',burpee:'10 reps'};
+      const met=fmt===0?wodI(`Metcon ${ST[p1].name} + ${ST[e].name}`,`4 rondas: ${PA[p1]} de ${ST[p1].name}, ${repsOf(s1,10)} de ${ST[s1].name} y 250 m de ${ST[e].name} (bloques de 4 min).`,circuit(4,[[p1,PA[p1]],[s1,repsOf(s1,10)],[e,'250 m']],240))
+        :fmt===1?wodI(`EMOM 12 · ${ST[p1].name} / ${ST[s1].name} / ${ST[p2]?ST[p2].name:'Burpee'}`,'Cada minuto cambias de ejercicio, 4 vueltas.',[{kind:'timed',name:'EMOM 12',short:'EMOM 12',dur:720,steps:Array.from({length:12},(_,m)=>{const k=[p1,s1,p2][m%3];return {k,amt:PA[k]||repsOf(k,10),dur:60}})}])
+        :wodI(`Metcon 40/20 · ${ST[p1].name} + ${ST[p2].name}`,'5 vueltas de 40 s de trabajo y 20 s de pausa en cada ejercicio.',[ivBlock('40/20','40/20',[{k:p1,amt:'40 s',dur:40},{k:'easy',amt:'20 s',dur:20},{k:p2,amt:'40 s',dur:40},{k:'easy',amt:'20 s',dur:20}],5)]);
+      return [{name:'Pierna',items:d1.filter(Boolean)},{name:'Tren superior',items:d2.filter(Boolean)},{name:'Completo y metcon',items:[accL(rp(id,'dbPower',w,3,u3),S,Math.max(8,Rp-2),90),accL(rp(id,w%2?'single':'dbHinge',w,2,u3),S,Rp,75),met].filter(Boolean)}];}}
 };
 let RM=lsGet('rm',{}),PSTATE=lsGet('pstate',{done:{}}),GYMPROG=null,PRGSEL=lsGet('prgsel',null),PRGWEEK=1;
 const doneMap=id=>(PSTATE.done&&PSTATE.done[id])||{};
-function curWeek(id){const pr=PROGS[id];if(id==='mine'&&MYPLAN)return Math.min(pr.weeks,Math.max(1,Math.floor((Date.now()-MYPLAN.start)/6048e5)+1));if(GYMPROG&&GYMPROG.progId===id&&GYMPROG.start){return Math.min(pr.weeks,Math.max(1,Math.floor((Date.now()-GYMPROG.start)/6048e5)+1))}
-  const dm=doneMap(id);for(let w=1;w<=pr.weeks;w++){for(let d=1;d<=pr.days;d++)if(!dm[w+'-'+d])return w}return pr.weeks}
+const doneCount=id=>{const c=progCycle(id),dm=doneMap(id);return Object.keys(dm).filter(k=>c?k.startsWith(c+'.'):!k.includes('.')).length};
+function curWeek(id){const pr=PROGS[id];if(id==='mine'&&MYPLAN)return Math.min(pr.weeks,Math.max(1,Math.floor((Date.now()-MYPLAN.start)/6048e5)+1));if(GYMPROG&&GYMPROG.progId===id&&GYMPROG.start){return Math.max(0,Math.floor((Date.now()-GYMPROG.start)/6048e5))%pr.weeks+1}
+  const dm=doneMap(id);for(let w=1;w<=pr.weeks;w++){for(let d=1;d<=pr.days;d++)if(!dm[dkey(id,w,d)])return w}return pr.weeks}
 function liftRx(it){
   const d=ST[it.k]||{};let kg=null,lab='';
   if(it.pct){const rm=+RM[it.rm];if(rm>0){kg=R25(rm*it.pct/100*(it.mul||1));lab=`${kg} kg (${it.pct}%)`}else lab=`${it.pct}% de tu 1RM`}
@@ -1742,7 +1779,7 @@ function renderProgs(){
   const gym=GYMPROG&&PROGS[GYMPROG.progId];
   el.innerHTML=`<div class="vhead"><div><h2>Programas</h2><p class="lede">Programas de varias semanas con series, repeticiones, peso y descanso. Registra cada serie y la app te sugiere el peso de la siguiente vez.</p></div></div>
   ${gym?`<div class="banner"><div><div class="flabel">Programa del gym</div><b>${esc(gym.name)}</b> · Semana ${curWeek(GYMPROG.progId)} de ${gym.weeks}</div><button class="btn main" type="button" data-open="${GYMPROG.progId}">Ver semana</button></div>`:''}
-  <div class="pgrid">${Object.entries(PROGS).map(([id,pr])=>{const dm=doneMap(id),n=Object.keys(dm).length,tot=pr.weeks*pr.days;
+  <div class="pgrid">${Object.entries(PROGS).map(([id,pr])=>{const n=doneCount(id),tot=pr.weeks*pr.days;
     return `<button class="pcardx" type="button" data-open="${id}"><div class="pmeta"><span class="pill">${pr.weeks} semanas</span><span class="pill">${pr.days} días/sem</span><span class="pill">${esc(pr.level)}</span></div><h3>${esc(pr.name)}</h3><p>${esc(pr.desc)}</p><div class="pbar"><i style="width:${Math.round(n/tot*100)}%"></i></div><span class="status">${n} de ${tot} sesiones</span></button>`}).join('')}</div>
   <section class="card" style="margin-top:18px"><h3>Tus máximos (1RM)</h3><p class="lede" style="font-size:13px">Con esto la app calcula el peso exacto de cada serie. Si no lo sabes, déjalo vacío y usa el porcentaje.</p>
     <div class="rmrow">${[['squat','Sentadilla'],['deadlift','Peso muerto'],['bench','Press banca']].map(([k,t])=>`<label for="rm-${k}">${t} (kg)<input type="text" inputmode="decimal" id="rm-${k}" data-rm="${k}" value="${RM[k]||''}" placeholder="—"></label>`).join('')}</div>
@@ -1753,8 +1790,9 @@ function renderProgDetail(el){
   const dm=doneMap(PRGSEL),days=pr.build(PRGWEEK);
   el.innerHTML=`<div class="vhead"><div><button class="btn ghost" type="button" id="prgBack" style="margin-bottom:12px">← Programas</button><h2>${esc(pr.name)}</h2><p class="lede">${esc(pr.desc)}</p></div>
     ${COACH&&DB&&!pr.mine?`<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><button class="btn" type="button" id="prgAssign">${GYMPROG&&GYMPROG.progId===PRGSEL?'Reiniciar en el gym desde hoy':'Asignar al gym desde hoy'}</button><span class="status" id="assignSt"></span></div>`:''}</div>
-  <div class="weeks">${Array.from({length:pr.weeks},(_,i)=>{const w=i+1,c=Array.from({length:pr.days},(_,d)=>dm[w+'-'+(d+1)]).filter(Boolean).length;return `<button type="button" data-w="${w}" aria-pressed="${w===PRGWEEK}" class="${c===pr.days?'full':''}">S${w}${c===pr.days?' ✓':''}</button>`}).join('')}</div>
-  <div class="days">${days.map((d,di)=>{const k=PRGWEEK+'-'+(di+1),done=dm[k];
+  ${(()=>{const c=progCycle(PRGSEL),all=doneCount(PRGSEL)>=pr.weeks*pr.days,gym=GYMPROG&&GYMPROG.progId===PRGSEL;return `<div class="cycbar"><span>Ciclo ${c+1}${c?' · ejercicios distintos al ciclo anterior':''}</span>${all&&!gym&&!pr.mine?`<button class="btn main" type="button" id="prgNextCyc">Empezar ciclo ${c+2} con ejercicios nuevos</button>`:''}</div>`})()}
+  <div class="weeks">${Array.from({length:pr.weeks},(_,i)=>{const w=i+1,c=Array.from({length:pr.days},(_,d)=>dm[dkey(PRGSEL,w,d+1)]).filter(Boolean).length;return `<button type="button" data-w="${w}" aria-pressed="${w===PRGWEEK}" class="${c===pr.days?'full':''}">S${w}${c===pr.days?' ✓':''}</button>`}).join('')}</div>
+  <div class="days">${days.map((d,di)=>{const k=dkey(PRGSEL,PRGWEEK,di+1),done=dm[k];
     return `<div class="day${done?' done':''}"><div class="bhead" style="margin:0"><h3>Día ${di+1}</h3>${done?`<span class="donetag">✓ ${fmtD(done)}</span>`:''}</div><div style="font-weight:700">${esc(d.name)}</div>
     <ul>${d.items.map(it=>it.t==='lift'?`<li><span>${esc(ST[it.k].name)}</span><span>${it.sets} × ${esc(it.reps)}</span></li>`:`<li><span>${esc(it.name)}</span><span>Con reloj</span></li>`).join('')}</ul>
     <button class="btn ${done?'':'main'}" type="button" data-day="${di+1}">${done?'Repetir sesión':'Empezar sesión'}</button></div>`}).join('')}</div>`;
@@ -1762,6 +1800,7 @@ function renderProgDetail(el){
 $('#prgBody').addEventListener('click',async e=>{
   const o=e.target.closest('[data-open]');if(o){PRGSEL=o.dataset.open;PRGWEEK=curWeek(PRGSEL);lsSet('prgsel',PRGSEL);renderProgs();window.scrollTo(0,0);return}
   if(e.target.closest('#prgBack')){PRGSEL=null;lsSet('prgsel',null);renderProgs();return}
+  if(e.target.closest('#prgNextCyc')){PSTATE.cyc=PSTATE.cyc||{};PSTATE.cyc[PRGSEL]=(PSTATE.cyc[PRGSEL]||0)+1;lsSet('pstate',PSTATE);PRGWEEK=1;renderProgs();window.scrollTo(0,0);return}
   const w=e.target.closest('[data-w]');if(w){PRGWEEK=+w.dataset.w;renderProgs();return}
   const d=e.target.closest('[data-day]');if(d){openSession(PRGSEL,PRGWEEK,+d.dataset.day);return}
   if(e.target.closest('#prgAssign')){const st=$('#assignSt');st.textContent='Guardando…';
@@ -1827,7 +1866,7 @@ $('#sessFinish').addEventListener('click',async()=>{
     if(it.t==='lift'){const done=x.sets.filter(s=>s.done).map(s=>({r:s.r,kg:s.kg}));if(done.length){logs[i]={k:it.k,sets:done};done.forEach(s=>{sets++;const r=parseFloat(s.r),kg=parseFloat(s.kg);if(r>0&&kg>0)vol+=r*kg*(/2 ×/.test(liftRx(it).lab)?2:1)})}}
     else if(x.time){const t=parseT(x.time);if(t)wods[i]={name:it.name,t}}});
   if(!sets&&!Object.keys(wods).length){st.className='status err';st.textContent='Marca al menos una serie o anota el tiempo del entreno.';return}
-  const pr=PROGS[SS.id],k=SS.w+'-'+SS.d,at=Date.now();
+  const pr=PROGS[SS.id],k=dkey(SS.id,SS.w,SS.d),at=Date.now();
   PSTATE.done=PSTATE.done||{};PSTATE.done[SS.id]=Object.assign({},PSTATE.done[SS.id],{[k]:at});lsSet('pstate',PSTATE);
   const sess={title:`${pr.name} · S${SS.w} D${SS.d}`,kind:'programa',progId:SS.id,week:SS.w,day:SS.d,div:DIV,total:Math.round((at-SS.start)/1000),volume:Math.round(vol),sets,
     splits:Object.values(wods).map(x=>({label:x.name,t:x.t})),logs,at};
@@ -2491,24 +2530,26 @@ function buildMyPlan(cfg){
     build:w=>{
       const ph=sched[w-1]||'taper',dl=deload(w),last=w===cfg.weeks;
       const S=(n)=>Math.max(1,n-(dl?1:0)),pct=p=>p-(dl?10:0);
-      const sqk=pick(['squat','frontsquat'],w),hk=pick(['deadlift','hipthrust','sumodl','deadlift'],w),pu=pick(['pushpress','bench','dbpress','floorpress'],w),pl=pick(['pullup','dbrow','chinup','dbrow'],w),core=pick(CORE,w);
+      const um=new Set(),sqk=rp('mine','sqBar',w,0,um)||'goblet',hk=rp('mine','hinge',w,0,um)||'kbdl',pu=rp('mine',w%2?'vpush':'hpush',w,0,um)||'pushup',pl=rp('mine','pull',w,0,um)||'dbrow',sg=rp('mine','single',w,0,um),pw=rp('mine','power',w,0,um);
       const str={base:[[3,'8-10',120,70],[3,8,120,70]],build:[[4,5,150,80],[4,5,150,80]],peak:[[3,3,180,85],[3,3,180,85]],taper:[[2,3,150,80],[2,3,150,80]]}[ph];
       const fz={name:`Fuerza${ph==='base'?' general':ph==='build'?' pesada':ph==='peak'?' de mantenimiento':' ligera'}`,items:[
-        lift(sqk,S(str[0][0]),str[0][1],str[0][2],{rm:'squat',pct:pct(str[0][3]),mul:sqk==='frontsquat'?.8:1}),
-        lift(hk,S(str[1][0]),hk==='hipthrust'?(ph==='base'?10:6):str[1][1],str[1][2],hk==='hipthrust'?{}:{rm:'deadlift',pct:pct(str[1][3])})].concat(ph==='taper'?[]:[lift(pu,S(3),ph==='base'?10:6,90),lift(pl,S(3),/pullup|chinup/.test(pl)?'máx':10,90),lift(core[0],3,core[1],45)])
-        .concat(ph==='base'||ph==='build'?[fin(w)]:[])};
-      const runQ={base:()=>{const n=[6,8,6,10][(w-1)%4];return wodI(`Intervalos ${n} × 400 m`,`A ${tp(pc.int)}. Lo que sobre del bloque es descanso.`,[warm(),...runInts(dl?Math.round(n*.6):n,'400 m',180),cool()])},
+        lift(sqk,S(str[0][0]),str[0][1],str[0][2],PAT.sqBar.includes(sqk)?{rm:'squat',pct:pct(str[0][3]),mul:sqk==='frontsquat'?.8:1}:{}),
+        lift(hk,S(str[1][0]),PAT.hiBar.includes(hk)?str[1][1]:repsOf(hk,ph==='base'?10:8),str[1][2],PAT.hiBar.includes(hk)?{rm:'deadlift',pct:pct(str[1][3])}:{})].concat(ph==='taper'?[]:[accL(pu,S(3),ph==='base'?10:6,90),accL(pl,S(3),10,90),coreL('mine',w,0)])
+        .concat(ph==='base'||ph==='build'?[accL(sg,S(3),ph==='base'?10:8,90),accL(pw,S(3),ph==='base'?10:8,75),finGen('mine',w,um)]:[]).filter(Boolean)};
+      const runQ=ph==='base'||ph==='build'?()=>motorGen('mine',w,ph==='build'?'pro':'base',dl):null;const runQ0={base:()=>{const n=[6,8,6,10][(w-1)%4];return wodI(`Intervalos ${n} × 400 m`,`A ${tp(pc.int)}. Lo que sobre del bloque es descanso.`,[warm(),...runInts(dl?Math.round(n*.6):n,'400 m',180),cool()])},
         build:()=>{const n=[4,5,4,6][(w-1)%4];return wodI(`Umbral ${n} × 1 km`,`A ${tp(pc.thr)}, bloques de 6 min.`,[warm(),...runInts(dl?3:n,'1 km',360),cool()])},
         peak:()=>wodI('Ritmo de carrera 3 × 2 km',`A ${tp(pc.race)}, ritmo de competencia.`,[warm(),...runInts(3,'2 km',660),cool()]),
-        taper:()=>wodI('Activación 4 × 400 m',`Rápidos y relajados a ${tp(pc.int)}. Poco volumen, misma intensidad.`,[warm(),...runInts(4,'400 m',180),cool()])}[ph]();
+        taper:()=>wodI('Activación 4 × 400 m',`Rápidos y relajados a ${tp(pc.int)}. Poco volumen, misma intensidad.`,[warm(),...runInts(4,'400 m',180),cool()])}[ph];
+      const runW=(w%2===0&&runQ)?runQ():runQ0();
       const wk=weak?[['run','1 km'],[weak,PSTAMT[weak].replace(/\d+/,m=>String(Math.round(+m/2)))]]:null;
       const hy={base:()=>wodI('Carrera comprometida',`${dl?3:4} rondas de 1 km + una estación${weak?`, con énfasis en ${ST[weak].name}`:''}.`,weak&&w%2?circuit(dl?3:4,wk,480):compromised(dl?3:4,w*3,480)),
         build:()=>wodI('Carrera comprometida',`${dl?3:6} rondas de 1 km a ${tp(pc.race)} + estación.`,compromised(dl?3:6,w*2,450)),
         peak:()=>w===sched.indexOf('peak')+1?wodI('Simulacro completo','Ensayo general: equipo, ritmo y transiciones como el día de la carrera.',buildSim('full').blocks):wodI('Medio simulacro 5–8','A ritmo de competencia.',buildSim('b').blocks),
         taper:()=>last?wodI('Shakeout antes de la carrera','15 min suave y 2 rondas cortas de estación para soltar.',[z2(15),...circuit(2,[['run','400 m'],['wallball','10 reps']],240)]):wodI('Medio simulacro ligero','4 km con estaciones 1–4 al 80 %.',buildSim('a').blocks)}[ph]();
-      const out=[fz,{name:'Carrera de calidad',items:[runQ]},{name:'Hyrox específico',items:[hy]}];
+      const out=[fz,{name:'Carrera de calidad',items:[runW]},{name:'Hyrox específico',items:[hy]}];
       if(days>=4)out.push({name:'Motor suave (zona 2)',items:[wodI('Zona 2',ph==='taper'?'20 min suave.':`Ritmo cómodo, puedes platicar. Alterna correr con ${w%2?'remo':'SkiErg'} para cuidar las piernas.`,[z2(ph==='taper'?20:ph==='base'?40:45,w%2&&ph!=='taper'?'row':null)])]});
-      if(days>=5)out.push({name:'Fuerza-resistencia de estaciones',items:[lift('sled',S(4),'25 m',120,{note:'Más pesado que en carrera.'}),lift('lunges',S(3),'20 m',90),lift('wallball',S(3),ph==='peak'?30:25,60),lift('farmers',S(3),'50 m',60)]});
+      if(days>=5){const u5=new Set(),c1=rp('mine','carry',w,0,u5)||'sled',c2=rp('mine','carry',w,1,u5)||'farmers',pw5=rp('mine','power',w,2,u5)||'wallball',sg5=rp('mine','single',w,1,u5);
+        out.push({name:'Fuerza-resistencia de estaciones',items:[lift(c1,S(4),repsOf(c1,0),120,{note:'Más pesado que en carrera.'}),lift(c2,S(3),repsOf(c2,0),90),accL(pw5,S(3),pw5==='wallball'?(ph==='peak'?30:25):12,60),accL(sg5,S(3),10,75)].filter(Boolean)})}
       return out;
     }};
   return PROGS.mine;

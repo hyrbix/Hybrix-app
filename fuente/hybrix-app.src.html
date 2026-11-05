@@ -713,8 +713,8 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
     <p class="lede">Así llevamos tus récords, tu progreso y tu lugar en el pizarrón. Solo tú y tu coach ven tus datos.</p><div id="onbBody"></div>
     <div class="actions"><button class="btn ghost" type="button" id="onbSkip">Ahora no</button></div></div>
 </div>
-<button type="button" class="aifab" id="aiFab" aria-label="Abrir coach virtual"><img src="__MARK__" alt=""><span>Coach virtual</span></button>
-<div id="aiPanel" class="aipanel" hidden role="dialog" aria-modal="true" aria-label="Coach virtual HYBRIX"><div class="aibox" id="aiBody"></div></div>
+<button type="button" class="aifab" id="aiFab" aria-label="Abrir coach"><img src="__MARK__" alt=""><span>Coach</span></button>
+<div id="aiPanel" class="aipanel" hidden role="dialog" aria-modal="true" aria-label="Coach HYBRIX"><div class="aibox" id="aiBody"></div></div>
 <div id="hshare" class="how" hidden role="dialog" aria-modal="true" aria-label="Compartir entrenamiento"><div class="hsbox"><button class="btn ghost" type="button" id="hshareClose" style="justify-self:end">Cerrar</button><div id="hshareBody"></div></div></div>
 <div id="how" class="how" hidden role="dialog" aria-modal="true" aria-labelledby="howName">
   <div class="howbox">
@@ -3150,7 +3150,7 @@ document.addEventListener('submit',async e=>{if(e.target.id!=='compForm')return;
   st.className='status';st.textContent='Publicando…';
   try{await DB.doc('wods/comps').set({list:(COMPS.list||[]).concat(c)});st.className='status ok';st.textContent='Publicada. Tus socios ya la pueden elegir.'}
   catch(err){st.className='status err';st.textContent='No se pudo publicar.'}});
-/* ---------- coach virtual: molestias y chat con IA ---------- */
+/* ---------- coach: molestias y chat con IA ---------- */
 var PAINA={
   rodilla:{n:'Rodilla',b:['run','squat','frontsquat','goblet','kbgob','lunges','dblunge','kblunge','bulgara','stepup','bbj','boxjump','wallball','thruster','burpee','sled','devil','wsquat','wwb']},
   espbaja:{n:'Espalda baja',b:['deadlift','sumodl','rdl','kbdl','slrdl','kbswing','kbclean','kbsnatch','row','dbrow','kbrow','sled','pull','farmers','bbj','burpee','devil','squat','frontsquat','russian','thruster','wallball']},
@@ -3177,7 +3177,7 @@ function painFallback(k){const cardio=['bike','row','ski','run'];if(cardio.inclu
   return ['hipthrust','dbrow','dbpress','latraise','plank','hollow','curl','triext','russian','farmers','goblet','kbswing'].find(y=>y!==k&&ST[y]&&avail(y))||null}
 function painChanges(wk){const out=[];if(!wk)return out;const a=adaptWk(wk);a.blocks.forEach(b=>b.steps.forEach(s=>{if(s.subOf&&painBlocks(s.subOf)&&!out.find(o=>o[0]===s.subOf))out.push([s.subOf,s.k])}));return out}
 function painBanner(){const act=painActive();const el=$('#painBanner');if(!el)return;if(!act.length){el.hidden=true;return}
-  el.hidden=false;el.innerHTML=`<span>🩹 Entrenos ajustados por molestia en: <b>${act.map(p=>esc(PAINA[p.a].n)+(p.until?` (hasta ${esc(fmtD(p.until))})`:'')).join(', ')}</b></span><button type="button" class="btn ghost" data-go="ai">Coach virtual</button>`}
+  el.hidden=false;el.innerHTML=`<span>🩹 Entrenos ajustados por molestia en: <b>${act.map(p=>esc(PAINA[p.a].n)+(p.until?` (hasta ${esc(fmtD(p.until))})`:'')).join(', ')}</b></span><button type="button" class="btn ghost" data-go="ai">Coach</button>`}
 document.addEventListener('click',e=>{if(e.target.closest('#painBanner [data-go]')||e.target.closest('#aiFab')){openAI(false);return}if(e.target.id==='aiPanel')closeAI()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#aiPanel').hidden)closeAI()});
 
@@ -3191,15 +3191,15 @@ function renderAI(){
         <div class="seg2" role="group" aria-label="Por cuánto tiempo">${[[1,'Hoy'],[3,'3 días'],[7,'1 semana'],[0,'Hasta quitarlo']].map(([d,t])=>`<button type="button" data-pd="${d}" class="${AISEL.days===d?'on':''}">${t}</button>`).join('')}</div></div>
       <button class="btn main" type="button" id="painGo"${AISEL.a.size?'':' disabled'}>Ajustar mis entrenos</button>
       <div class="painwarn"><b>Para y ve con un médico o fisioterapeuta si</b> el dolor es fuerte o punzante, hay hinchazón, moretón o adormecimiento, no puedes apoyar o mover la zona, o no mejora en una semana. Si sientes dolor en el pecho, falta de aire fuera de lo normal o mareo, detente y llama al 911.</div></div>`;
-  el.innerHTML=`<div class="aihead"><img src="${esc(mk)}" alt="HYBRIX"><div><b>Coach virtual</b><span>HYBRIX · pregúntame o dime si algo te duele</span></div><button type="button" class="btn ghost" id="aiClose" aria-label="Cerrar">✕</button></div>
+  el.innerHTML=`<div class="aihead"><img src="${esc(mk)}" alt="HYBRIX"><div><b>Coach</b><span>HYBRIX · pregúntame o dime si algo te duele</span></div><button type="button" class="btn ghost" id="aiClose" aria-label="Cerrar">✕</button></div>
     ${act.length?`<div class="painact"><span>🩹 Cuidando:</span>${act.map(p=>`<span class="pchipx">${esc(PAINA[p.a].n)}${p.until?' · hasta '+esc(fmtD(p.until)):''}<button type="button" data-prm="${p.a}" aria-label="Quitar ${esc(PAINA[p.a].n)}">✕</button></span>`).join('')}<button type="button" class="btn ghost" id="painClear">Ya no me duele</button></div>`:''}
     <div class="aichat" id="aiLog" aria-live="polite">
-      <div class="msg bot">¡Hola${PROFILE&&PROFILE.nick?' '+esc(PROFILE.nick):''}! Soy tu coach virtual de HYBRIX. Pregúntame de técnica, ritmos, tu plan o tu competencia. Si algo te duele, dímelo y ajusto tus entrenos.</div>
+      <div class="msg bot">¡Hola${PROFILE&&PROFILE.nick?' '+esc(PROFILE.nick):''}! Soy tu coach de HYBRIX. Pregúntame de técnica, ritmos, tu plan o tu competencia. Si algo te duele, dímelo y ajusto tus entrenos.</div>
       ${AICHAT.map(m=>`<div class="msg ${m.role==='user'?'me':'bot'}">${m.role==='user'?esc(m.content):fmtAI(m.content)}</div>`).join('')}
       ${AIPAINOPEN?painCard:''}
       ${!AIBUSY?`<div class="aisug"><button type="button" data-pain="1" class="painq">🩹 Me duele algo</button>${AICHAT.length?'':['¿Cómo mejoro mi sled push?','¿Qué ritmo debo correr en mi competencia?','¿Qué como antes de entrenar temprano?'].map(q=>`<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`:''}
     </div>
-    <form id="aiForm" class="aiform"><textarea id="aiIn" rows="2" placeholder="Escribe tu pregunta…" aria-label="Pregunta para el coach virtual"></textarea><div class="actions" style="margin-top:8px"><button class="btn main" type="submit" id="aiSend"${AIBUSY?' disabled':''}>Enviar</button>${AIBUSY?'<button class="btn ghost" type="button" id="aiStop">Detener</button>':''}${AICHAT.length&&!AIBUSY?'<button class="btn ghost" type="button" id="aiNew">Nueva conversación</button>':''}</div></form>
+    <form id="aiForm" class="aiform"><textarea id="aiIn" rows="2" placeholder="Escribe tu pregunta…" aria-label="Pregunta para el coach"></textarea><div class="actions" style="margin-top:8px"><button class="btn main" type="submit" id="aiSend"${AIBUSY?' disabled':''}>Enviar</button>${AIBUSY?'<button class="btn ghost" type="button" id="aiStop">Detener</button>':''}${AICHAT.length&&!AIBUSY?'<button class="btn ghost" type="button" id="aiNew">Nueva conversación</button>':''}</div></form>
     ${AISAMPLE===null?'<p class="status" style="margin:6px 0 0">Las respuestas con IA funcionan en la app dentro de Claude; en tu página web llegarán cuando conectemos el servidor. "Me duele algo" sí funciona en todos lados.</p>':''}`;
   const l=$('#aiLog');if(l)l.scrollTop=l.scrollHeight;
 }
@@ -3214,7 +3214,7 @@ Plan: ${MYPLAN?`meta ${fmtT(MYPLAN.goal)} el ${MYPLAN.race}, ${MYPLAN.days} día
 Últimos entrenos: ${ss||'ninguno guardado'}.
 Molestias activas: ${act}. Zonas que puedes marcar con la herramienta: ${Object.entries(PAINA).map(([k,v])=>k+'='+v.n).join(', ')}.
 Equipo del gym: SkiErg, remo, bici, caminadoras, trineos, wall balls, mancuernas, kettlebells, sandbags, barras. Fecha de hoy: ${todayKey()}.`}
-const AIRULES=()=>`Eres el coach virtual de HYBRIX, un gym de Hyrox en Mérida. Hablas en español de México, cercano y claro. Respuestas cortas y prácticas (máximo unas 120 palabras, con viñetas si ayudan), salvo que pidan más detalle.
+const AIRULES=()=>`Eres el coach de HYBRIX, un gym de Hyrox en Mérida. Hablas en español de México, cercano y claro. Respuestas cortas y prácticas (máximo unas 120 palabras, con viñetas si ayudan), salvo que pidan más detalle.
 Ayudas con técnica de las estaciones Hyrox, ritmos, cómo usar la app, preparación para competencia, recuperación y hábitos generales de alimentación e hidratación para entrenar.
 No diagnosticas lesiones ni recomiendas medicamentos ni dosis. Si el atleta reporta dolor o molestia: si no está clara la zona, pregunta dónde; usa la herramienta marcar_molestia para ajustar sus entrenos (nivel "leve" si es molestia, "dolor" si duele al moverse) y dile en una línea qué ejercicios cambiaron. Si menciona señales de alarma (dolor en el pecho, falta de aire anormal, mareo o desmayo, dolor fuerte o punzante, hinchazón, adormecimiento, no poder apoyar, dolor que dura más de una semana) dile que pare y vea a un médico o fisioterapeuta, y que en una emergencia llame al 911.
 No inventes datos del atleta: usa solo estos.

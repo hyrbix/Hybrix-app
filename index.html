@@ -3237,7 +3237,7 @@ function renderAI(){
       ${!AIBUSY?`<div class="aisug"><button type="button" data-pain="1" class="painq">🩹 Me duele algo</button>${AICHAT.length?'':['¿Cómo mejoro mi sled push?','¿Qué ritmo debo correr en mi competencia?','¿Qué como antes de entrenar temprano?'].map(q=>`<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`:''}
     </div>
     <form id="aiForm" class="aiform"><textarea id="aiIn" rows="2" placeholder="Escribe tu pregunta…" aria-label="Pregunta para el coach"></textarea><div class="actions" style="margin-top:8px"><button class="btn main" type="submit" id="aiSend"${AIBUSY?' disabled':''}>Enviar</button>${AIBUSY?'<button class="btn ghost" type="button" id="aiStop">Detener</button>':''}${AICHAT.length&&!AIBUSY?'<button class="btn ghost" type="button" id="aiNew">Nueva conversación</button>':''}</div></form>
-    ${AISAMPLE===null?'<p class="status" style="margin:6px 0 0">Las respuestas con IA funcionan en la app dentro de Claude; en tu página web llegarán cuando conectemos el servidor. "Me duele algo" sí funciona en todos lados.</p>':''}`;
+    ${AISAMPLE===null&&!AIURL?'<p class="status" style="margin:6px 0 0">Las respuestas con IA funcionan en la app dentro de Claude; en tu página web llegarán cuando conectemos el servidor. "Me duele algo" sí funciona en todos lados.</p>':''}`;
   const l=$('#aiLog');if(l)l.scrollTop=l.scrollHeight;
 }
 function openAI(pain){$('#aiPanel').hidden=false;if(pain)AIPAINOPEN=true;renderAI();setTimeout(()=>{const i=$('#aiIn');if(i&&!pain)i.focus()},50)}
@@ -3256,18 +3256,41 @@ Ayudas con técnica de las estaciones Hyrox, ritmos, cómo usar la app, preparac
 No diagnosticas lesiones ni recomiendas medicamentos ni dosis. Si el atleta reporta dolor o molestia: si no está clara la zona, pregunta dónde; usa la herramienta marcar_molestia para ajustar sus entrenos (nivel "leve" si es molestia, "dolor" si duele al moverse) y dile en una línea qué ejercicios cambiaron. Si menciona señales de alarma (dolor en el pecho, falta de aire anormal, mareo o desmayo, dolor fuerte o punzante, hinchazón, adormecimiento, no poder apoyar, dolor que dura más de una semana) dile que pare y vea a un médico o fisioterapeuta, y que en una emergencia llame al 911.
 No inventes datos del atleta: usa solo estos.
 ${aiContext()}`;
-async function aiAsk(q){
-  if(AIBUSY||!q.trim())return;
-  if(AISAMPLE===undefined){try{AISAMPLE=window.claude&&window.claude.use?await window.claude.use('sample'):null}catch(e){AISAMPLE=null}}
-  if(!AISAMPLE){AICHAT.push({role:'user',content:q.trim(),local:true});AICHAT.push({role:'assistant',local:true,content:'Por ahora solo puedo responder preguntas dentro de la app en Claude. Si algo te duele, toca **Me duele algo** y ajusto tus entrenos.'});renderAI();return}
-  AICHAT.push({role:'user',content:q.trim()});AICHAT=AICHAT.slice(-16);AIBUSY=true;renderAI();
-  const log=$('#aiLog'),bub=document.createElement('div');bub.className='msg bot';bub.textContent='Pensando…';log.appendChild(bub);log.scrollTop=log.scrollHeight;
-  AICTL=new AbortController();
-  const tools=[{name:'marcar_molestia',description:'Ajusta los entrenos del atleta para no cargar una zona que le molesta o duele. Devuelve qué ejercicios de su entreno de hoy se cambiaron.',
+function aiTools(){
+  return [{name:'marcar_molestia',description:'Ajusta los entrenos del atleta para no cargar una zona que le molesta o duele. Devuelve qué ejercicios de su entreno de hoy se cambiaron.',
       inputSchema:{type:'object',properties:{zona:{type:'string',enum:Object.keys(PAINA)},nivel:{type:'string',enum:['leve','dolor']},dias:{type:'number',description:'Por cuántos días (1, 3, 7) o 0 hasta que el atleta lo quite'}},required:['zona']},
       execute:inp=>{const z=String(inp.zona||''),ok=setPain(z,String(inp.nivel||'leve'),Number(inp.dias??3));if(!ok)throw new Error('Zona no válida');const ch=painChanges(GENWK).map(([a,b])=>`${ST[a].name} → ${ST[b].name}`);return {ok:true,zona:PAINA[z].n,cambios_hoy:ch}}},
     {name:'quitar_molestia',description:'Quita el ajuste por molestia cuando el atleta dice que ya no le duele. Sin zona quita todas.',inputSchema:{type:'object',properties:{zona:{type:'string',enum:Object.keys(PAINA)}}},
       execute:inp=>{clearPain(inp.zona?String(inp.zona):null);return {ok:true}}}];
+}
+/* servidor propio del coach (para la app fuera de Claude). Se llena con la dirección del Worker. */
+const AIURL='';
+async function aiAskWeb(q){
+  AICHAT.push({role:'user',content:q.trim()});AICHAT=AICHAT.slice(-16);AIBUSY=true;renderAI();
+  const log=$('#aiLog'),bub=document.createElement('div');bub.className='msg bot';bub.textContent='Pensando…';log.appendChild(bub);log.scrollTop=log.scrollHeight;
+  AICTL=new AbortController();const TX={};aiTools().forEach(t=>TX[t.name]=t.execute);
+  let msgs=AICHAT.filter(m=>!m.local).map(m=>({role:m.role,content:m.content}));while(msgs.length&&msgs[0].role!=='user')msgs.shift();
+  let final='';
+  try{for(let round=0;round<4;round++){
+      const r=await fetch(AIURL,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({context:aiContext(),messages:msgs}),signal:AICTL.signal});
+      if(!r.ok)throw new Error('http '+r.status);const j=await r.json();
+      const txt=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n').trim();if(txt){final=(final?final+'\n\n':'')+txt;bub.innerHTML=fmtAI(final)}
+      if(j.stop_reason==='tool_use'){const uses=j.content.filter(c=>c.type==='tool_use');msgs.push({role:'assistant',content:j.content});
+        msgs.push({role:'user',content:uses.map(u=>{try{return {type:'tool_result',tool_use_id:u.id,content:JSON.stringify(TX[u.name]?TX[u.name](u.input||{}):{error:'desconocida'})}}catch(e){return {type:'tool_result',tool_use_id:u.id,content:'Error: '+e.message,is_error:true}}})});continue}
+      break}
+    AICHAT.push({role:'assistant',content:final||'Listo.'})}
+  catch(e){if(e&&e.name!=='AbortError')AICHAT.push({role:'assistant',local:true,content:'No pude conectarme con el coach. Revisa tu internet e intenta otra vez.'});else if(final)AICHAT.push({role:'assistant',content:final})}
+  finally{AIBUSY=false;AICTL=null;renderAI()}
+}
+async function aiAsk(q){
+  if(AIBUSY||!q.trim())return;
+  if(AISAMPLE===undefined){try{AISAMPLE=window.claude&&window.claude.use?await window.claude.use('sample'):null}catch(e){AISAMPLE=null}}
+  if(!AISAMPLE&&AIURL)return aiAskWeb(q);
+  if(!AISAMPLE){AICHAT.push({role:'user',content:q.trim(),local:true});AICHAT.push({role:'assistant',local:true,content:'Por ahora solo puedo responder preguntas dentro de la app en Claude. Si algo te duele, toca **Me duele algo** y ajusto tus entrenos.'});renderAI();return}
+  AICHAT.push({role:'user',content:q.trim()});AICHAT=AICHAT.slice(-16);AIBUSY=true;renderAI();
+  const log=$('#aiLog'),bub=document.createElement('div');bub.className='msg bot';bub.textContent='Pensando…';log.appendChild(bub);log.scrollTop=log.scrollHeight;
+  AICTL=new AbortController();
+  const tools=aiTools();
   let useTools=true;try{const lim=await AISAMPLE.limits();useTools=!!(lim&&lim.tools)}catch(e){useTools=false}
   try{const r=await AISAMPLE([{role:'user',content:AIRULES()},...AICHAT.filter(m=>!m.local).map(m=>({role:m.role,content:m.content}))],Object.assign({signal:AICTL.signal,onText:({text})=>{bub.innerHTML=fmtAI(text);log.scrollTop=log.scrollHeight}},useTools?{tools}:{cache:false}));
     AICHAT.push({role:'assistant',content:r.text})}
